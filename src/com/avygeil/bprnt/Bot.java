@@ -33,7 +33,7 @@ public class Bot {
 	}
 	
 	public void Run() {
-		System.out.println("hello world");
+		client.getDispatcher().registerListener(new EventListener());
 	}
 
 }
