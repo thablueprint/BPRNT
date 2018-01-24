@@ -87,8 +87,21 @@ public class BaseEmoji {
 		return result.toString();
 	}
 	
-	public static String decode(String encodedInput) {
-		return "";
+	public static String decode(String encodedInput) throws IllegalArgumentException {
+		String[] encodedChars = encodedInput.split(" ");
+		StringBuilder result = new StringBuilder();
+		
+		for (String character : encodedChars) {
+			Character decodedCharacter = emojiMap.getKey(character);
+			
+			if (decodedCharacter == null) {
+				throw new IllegalArgumentException();
+			}
+			
+			result.append(decodedCharacter);
+		}
+		
+		return new String(Base64.getDecoder().decode(result.toString()));
 	}
 
 }

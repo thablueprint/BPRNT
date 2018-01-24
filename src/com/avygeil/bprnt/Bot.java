@@ -37,8 +37,13 @@ public class Bot {
 	public void Run() {
 		client.getDispatcher().registerListener(new EventListener());
 		
-		String test = BaseEmoji.encode("je suis une tulipe");
-		System.out.println(test);
+		String test = "je suis une tulipe";
+		String encoded = BaseEmoji.encode(test);
+		String decoded = BaseEmoji.decode(encoded);
+		
+		System.out.println("Base: " + test);
+		System.out.println("Encodé: " + encoded);
+		System.out.println("Decodé: " + decoded);
 	}
 
 }
