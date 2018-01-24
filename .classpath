@@ -7,5 +7,6 @@
 			<attribute name="javadoc_location" value="https://jitpack.io/com/github/austinv11/Discord4j/2.9.3/javadoc/"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="lib" path="libs/commons-collections4-4.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
