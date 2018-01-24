@@ -1,13 +1,15 @@
 package com.avygeil.bprnt.util;
 
+import java.util.Base64;
+
 import org.apache.commons.collections4.BidiMap;
+import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 
 public class BaseEmoji {
 	
-	private static BidiMap<Character, String> emojiMap;
+	private static BidiMap<Character, String> emojiMap = new DualHashBidiMap<>();
 	
-	static {
-		emojiMap.put('A', "\uD83C\uDF35");
+	static {		
 		emojiMap.put('B', "\uD83C\uDF3F");
 		emojiMap.put('C', "\uD83C\uDF45");
 		emojiMap.put('D', "\uD83C\uDF52");
@@ -74,7 +76,14 @@ public class BaseEmoji {
 	}
 	
 	public static String encode(String rawInput) {
-		return "";
+		String b64 = Base64.getEncoder().encodeToString(rawInput.getBytes());
+		StringBuilder result = new StringBuilder();
+		
+		for (char character : b64.toCharArray()) {
+			result.append(emojiMap.get(character));
+		}
+		
+		return result.toString();
 	}
 	
 	public static String decode(String encodedInput) {

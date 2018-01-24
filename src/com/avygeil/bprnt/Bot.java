@@ -1,9 +1,6 @@
 package com.avygeil.bprnt;
 
-import java.io.BufferedWriter;
-import java.io.FileOutputStream;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
+import com.avygeil.bprnt.util.BaseEmoji;
 
 import sx.blah.discord.api.ClientBuilder;
 import sx.blah.discord.api.IDiscordClient;
@@ -40,16 +37,8 @@ public class Bot {
 	public void Run() {
 		client.getDispatcher().registerListener(new EventListener());
 		
-		try {
-			Writer out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("test.txt"), "UTF-8"));
-			try {
-				out.write("" + ("\uD83C\uDF4C").length());
-			} finally {
-				out.close();
-			}
-		} catch ( Exception e ) {
-			
-		}
+		String test = BaseEmoji.encode("je suis une tulipe");
+		System.out.println(test);
 	}
 
 }
