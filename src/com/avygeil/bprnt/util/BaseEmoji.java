@@ -81,6 +81,7 @@ public class BaseEmoji {
 		
 		for (char character : b64.toCharArray()) {
 			result.append(emojiMap.get(character));
+			result.append(" ");
 		}
 		
 		return result.toString();
