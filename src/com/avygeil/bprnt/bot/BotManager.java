@@ -1,9 +1,11 @@
 package com.avygeil.bprnt.bot;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.avygeil.bprnt.util.BaseEmoji;
+import com.avygeil.bprnt.config.ConfigStream;
 
 import sx.blah.discord.api.ClientBuilder;
 import sx.blah.discord.api.IDiscordClient;
@@ -46,14 +48,13 @@ public class BotManager {
 	
 	public void Run() {
 		client.getDispatcher().registerListener(this);
+		ConfigStream testConfig = new ConfigStream(new File("config.emoji"));
 		
-		String test = "je suis une tulipe";
-		String encoded = BaseEmoji.encode(test);
-		String decoded = BaseEmoji.decode(encoded);
-		
-		System.out.println("Base: " + test);
-		System.out.println("Encodé: " + encoded);
-		System.out.println("Decodé: " + decoded);
+		try {
+			testConfig.read();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}	
 	}
 	
 	@EventSubscriber

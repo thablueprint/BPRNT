@@ -9,7 +9,8 @@ public class BaseEmoji {
 	
 	private static BidiMap<Character, String> emojiMap = new DualHashBidiMap<>();
 	
-	static {		
+	static {
+		emojiMap.put('A', "\uD83C\uDF35");
 		emojiMap.put('B', "\uD83C\uDF3F");
 		emojiMap.put('C', "\uD83C\uDF45");
 		emojiMap.put('D', "\uD83C\uDF52");
@@ -76,7 +77,7 @@ public class BaseEmoji {
 	}
 	
 	public static String encode(String rawInput) {
-		String b64 = Base64.getEncoder().encodeToString(rawInput.getBytes());
+		String b64 = Base64.getEncoder().withoutPadding().encodeToString(rawInput.getBytes());
 		StringBuilder result = new StringBuilder();
 		
 		for (char character : b64.toCharArray()) {

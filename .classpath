@@ -7,10 +7,19 @@
 			<attribute name="javadoc_location" value="https://jitpack.io/com/github/austinv11/Discord4j/2.9.3/javadoc/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="libs/commons-collections4-4.1.jar"/>
+	<classpathentry kind="lib" path="libs/commons-collections4-4.1.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="https://commons.apache.org/proper/commons-collections/javadocs/api-release/"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="lib" path="libs/commons-io-2.6.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="https://commons.apache.org/proper/commons-io/javadocs/api-release/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="libs/gson-2.8.2.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="https://www.javadoc.io/doc/com.google.code.gson/gson/2.8.2"/>
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="output" path="bin"/>
