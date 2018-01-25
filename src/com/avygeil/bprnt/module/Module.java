@@ -6,6 +6,8 @@ import sx.blah.discord.handle.obj.IUser;
 
 public interface Module {
 	
+	int getPriority();
+	
 	void handleMessage(IUser author, IChannel channel, IMessage message);
 
 }

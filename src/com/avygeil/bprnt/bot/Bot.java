@@ -3,6 +3,7 @@ package com.avygeil.bprnt.bot;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import com.avygeil.bprnt.config.GuildConfig;
@@ -58,6 +59,18 @@ public class Bot {
 				e.printStackTrace();
 			}
 		}
+		
+		// sort the module list based on a module defined priority index
+		// higher priority means lower index in the list, which means receiving events earlier
+		moduleInstances.sort(new Comparator<Module>() {
+			
+			@Override
+			public int compare(Module arg0, Module arg1) {
+				// if p0 > p1, p1 - p0 < 0 => p0 gets indexed earlier
+				return Integer.signum(arg1.getPriority() - arg0.getPriority());
+			}
+			
+		});
 	}
 	
 	public void onMessageReceived(IUser author, IChannel channel, IMessage message) {

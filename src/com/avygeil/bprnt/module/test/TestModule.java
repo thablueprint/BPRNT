@@ -13,6 +13,11 @@ public class TestModule extends ModuleBase {
 	public TestModule(Bot botInstance, ModuleConfig config) {
 		super(botInstance, config);
 	}
+	
+	@Override
+	public int getPriority() {
+		return 2;
+	}
 
 	@Override
 	public void handleMessage(IUser author, IChannel channel, IMessage message) {
