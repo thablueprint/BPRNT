@@ -5,10 +5,14 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.Set;
+
+import org.reflections.Reflections;
 
 import com.avygeil.bprnt.config.BotConfig;
 import com.avygeil.bprnt.config.ConfigStream;
-import com.avygeil.bprnt.module.Module;
+import com.avygeil.bprnt.config.GuildConfig;
+import com.avygeil.bprnt.module.ModuleBase;
 import com.avygeil.bprnt.util.SubclassPool;
 
 import sx.blah.discord.api.ClientBuilder;
@@ -22,7 +26,7 @@ import sx.blah.discord.util.DiscordException;
 public class BotManager {
 	
 	private IDiscordClient client = null;
-	private SubclassPool<Module> moduleClassPool = null;
+	private SubclassPool<ModuleBase> moduleClassPool = null;
 	private ConfigStream configStream = null;
 	
 	// une instance de bot par id de guilde
@@ -47,24 +51,21 @@ public class BotManager {
 			System.out.println("If you made a mistake, just delete the config file to start over");
 			
 			config.token = inputToken;
-			configStream.save();
+			saveConfig(); // use non error propagating saving method
 		}
 		
-		// build the module class pool
-		moduleClassPool = new SubclassPool<>(Module.class);
+		// detect modules on the classpath and build the initial modules pool
+		moduleClassPool = new SubclassPool<>(ModuleBase.class);
 		
-		/*
-		 * TODO
-		 * pour l'instant je charge les classes avec un chemin statique
-		 * On fera une découverte dynamique des sous classes de Module plus tard
-		 */
-		try {
-			moduleClassPool.registerClass("com.avygeil.bprnt.module.test.TestModule");
-		} catch (ClassNotFoundException | ClassCastException e) {
-			e.printStackTrace();
+		final Reflections reflections = new Reflections("com.avygeil.bprnt.module");
+		Set<Class<? extends ModuleBase>> detectedModuleClasses = reflections.getSubTypesOf(ModuleBase.class);
+		
+		for (Class<? extends ModuleBase> moduleClass : detectedModuleClasses) {
+			System.out.println("Discovered module: " + moduleClass.getName());
+			moduleClassPool.registerClass(moduleClass);
 		}
 		
-		System.out.println("Registered " + moduleClassPool.getNumClasses() + " module" + (moduleClassPool.getNumClasses() > 1 ? "s" : ""));
+		System.out.println("Registered " + moduleClassPool.getNumClasses() + " modules");
 		
 		// now login using the token
 		ClientBuilder builder = new ClientBuilder();
@@ -80,15 +81,43 @@ public class BotManager {
 		client.getDispatcher().registerListener(this);
 	}
 	
+	public void saveConfig() {
+		try {
+			configStream.save();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public SubclassPool<ModuleBase> getModulePool() {
+		return moduleClassPool;
+	}
+	
 	@EventSubscriber
 	public void onGuildCreateEvent(GuildCreateEvent event) {
-		System.out.println("Initializing Bot for guild: " + event.getGuild().getName());
-		botInstances.putIfAbsent(event.getGuild().getLongID(), new Bot());
+		final long guildId = event.getGuild().getLongID();
+		
+		if (botInstances.containsKey(guildId)) {
+			return; // this can happen from a rejoin etc, just leave it as it is
+		}
+		
+		// we just connected to a guild, whether at startup or because someone just added us
+		
+		// if we don't have a config for this guild yet, this is the first connection, so create it		
+		if (configStream.getConfig().guilds.putIfAbsent(guildId, new GuildConfig()) == null) {
+			System.out.println("Created new guild config for new guild: " + event.getGuild().getName());
+			saveConfig();
+		}
+		
+		// create the new instance
+		final GuildConfig instanceConfig = configStream.getConfig().guilds.get(guildId); // should never be null
+		final Bot newBotInstance = new Bot(this, instanceConfig);
+		newBotInstance.loadModules();
+		botInstances.put(guildId, newBotInstance);
 	}
 	
 	@EventSubscriber
 	public void onGuildLeaveEvent(GuildLeaveEvent event) {
-		System.out.println("Removing Bot from guild: " + event.getGuild().getName());
 		botInstances.remove(event.getGuild().getLongID());
 	}
 	
@@ -97,6 +126,7 @@ public class BotManager {
 		Bot botInstance = botInstances.get(event.getGuild().getLongID());
 		
 		if (botInstance == null) {
+			System.err.println("WARNING: Received message from an unmapped guild!");
 			return;
 		}
 		
