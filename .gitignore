@@ -22,6 +22,11 @@
 hs_err_pid*
 /bin/
 
+# Eclipse
+.settings/
+
+# Maven
+/target/
+
 # Project specific files
 *.emoji
-/target/
