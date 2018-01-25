@@ -9,10 +9,14 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.avygeil.bprnt.command.CommandStore;
 import com.avygeil.bprnt.config.GuildConfig;
 import com.avygeil.bprnt.config.ModuleConfig;
+import com.avygeil.bprnt.config.PermissionsConfig;
 import com.avygeil.bprnt.module.Module;
 import com.avygeil.bprnt.module.ModuleBase;
+import com.avygeil.bprnt.permission.PermissionsHandler;
+import com.avygeil.bprnt.permission.SimplePermissionsHandler;
 import com.avygeil.bprnt.util.SubclassPool;
 
 import sx.blah.discord.handle.obj.IChannel;
@@ -28,8 +32,10 @@ public class Bot {
 	}
 	
 	private final BotManager manager;
-	private final GuildConfig config;
 	
+	private final GuildConfig config;
+	private PermissionsHandler permissionsHandler = null;
+	private CommandStore commandStore = null;
 	private List<Module> moduleInstances = new ArrayList<>();
 	
 	public Bot(BotManager manager, GuildConfig config) {
@@ -37,7 +43,20 @@ public class Bot {
 		this.config = config;
 	}
 	
-	public void loadModules() {
+	public void initialize() {
+		// first, create the permissions handler for this module
+		
+		final PermissionsConfig permissionsConfig = config.permissions;
+		
+		permissionsHandler = new SimplePermissionsHandler(permissionsConfig)
+				.setGlobalAdmins(manager.getGlobalAdmins())
+				.setLocalAdmins(getLocalAdmins());
+		
+		// create the command store
+		commandStore = new CommandStore(config.commandPrefix, permissionsHandler);
+		
+		// construct all enabled modules dynamically
+		
 		SubclassPool<ModuleBase> classPool = manager.getModulePool();
 		
 		for (Class<? extends ModuleBase> clazz : classPool.getClasses()) {
@@ -80,11 +99,22 @@ public class Bot {
 			}
 			
 		});
+		
+		// convenience method to give modules a chance to register their commands early on
+		moduleInstances.forEach(m -> m.registerCommands(commandStore));
 	}
 	
-	public void onMessageReceived(IUser author, IChannel channel, IMessage message) {
+	public List<Long> getLocalAdmins() {
+		return config.admins;
+	}
+	
+	public void onMessageReceived(IUser sender, IChannel channel, IMessage message) {
+		// first, handle commands
+		commandStore.handleCommand(sender, channel, message);
+		
+		// even if the command was handled, we still fire a message event (so modules like loggers still work)
 		for (Module module : moduleInstances) {
-			module.handleMessage(author, channel, message);
+			module.handleMessage(sender, channel, message);
 		}
 	}
 

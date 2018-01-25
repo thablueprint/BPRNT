@@ -3,6 +3,7 @@ package com.avygeil.bprnt.bot;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
@@ -34,8 +35,9 @@ public class BotManager {
 	}
 	
 	private IDiscordClient client = null;
-	private SubclassPool<ModuleBase> moduleClassPool = null;
+	
 	private ConfigStream configStream = null;
+	private SubclassPool<ModuleBase> moduleClassPool = null;
 	
 	// une instance de bot par id de guilde
 	private Map<Long, Bot> botInstances = new HashMap<>();
@@ -89,6 +91,10 @@ public class BotManager {
 		client.getDispatcher().registerListener(this);
 	}
 	
+	public List<Long> getGlobalAdmins() {
+		return configStream.getConfig().globalAdmins;
+	}
+	
 	public void saveConfig() {
 		try {
 			configStream.save();
@@ -120,7 +126,7 @@ public class BotManager {
 		// create the new instance
 		final GuildConfig instanceConfig = configStream.getConfig().guilds.get(guildId); // should never be null
 		final Bot newBotInstance = new Bot(this, instanceConfig);
-		newBotInstance.loadModules();
+		newBotInstance.initialize();
 		botInstances.put(guildId, newBotInstance);
 	}
 	

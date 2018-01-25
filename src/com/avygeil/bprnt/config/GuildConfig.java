@@ -8,6 +8,7 @@ import java.util.Map;
 public class GuildConfig {
 	
 	public final List<Long> admins = new ArrayList<>();
+	public final String commandPrefix = "!";
 	public final Map<String, ModuleConfig> modules = new HashMap<>();
 	public final PermissionsConfig permissions = new PermissionsConfig();
 
