@@ -8,6 +8,8 @@ import java.util.Scanner;
 
 import com.avygeil.bprnt.config.BotConfig;
 import com.avygeil.bprnt.config.ConfigStream;
+import com.avygeil.bprnt.module.Module;
+import com.avygeil.bprnt.util.SubclassPool;
 
 import sx.blah.discord.api.ClientBuilder;
 import sx.blah.discord.api.IDiscordClient;
@@ -20,6 +22,7 @@ import sx.blah.discord.util.DiscordException;
 public class BotManager {
 	
 	private IDiscordClient client = null;
+	private SubclassPool<Module> moduleClassPool = null;
 	private ConfigStream configStream = null;
 	
 	// une instance de bot par id de guilde
@@ -46,6 +49,22 @@ public class BotManager {
 			config.token = inputToken;
 			configStream.save();
 		}
+		
+		// build the module class pool
+		moduleClassPool = new SubclassPool<>(Module.class);
+		
+		/*
+		 * TODO
+		 * pour l'instant je charge les classes avec un chemin statique
+		 * On fera une découverte dynamique des sous classes de Module plus tard
+		 */
+		try {
+			moduleClassPool.registerClass("com.avygeil.bprnt.module.test.TestModule");
+		} catch (ClassNotFoundException | ClassCastException e) {
+			e.printStackTrace();
+		}
+		
+		System.out.println("Registered " + moduleClassPool.getNumClasses() + " module" + (moduleClassPool.getNumClasses() > 1 ? "s" : ""));
 		
 		// now login using the token
 		ClientBuilder builder = new ClientBuilder();
