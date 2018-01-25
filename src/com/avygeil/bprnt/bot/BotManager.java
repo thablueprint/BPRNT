@@ -8,6 +8,8 @@ import java.util.Scanner;
 import java.util.Set;
 
 import org.reflections.Reflections;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.avygeil.bprnt.config.BotConfig;
 import com.avygeil.bprnt.config.ConfigStream;
@@ -25,6 +27,12 @@ import sx.blah.discord.util.DiscordException;
 
 public class BotManager {
 	
+	public static final Logger LOGGER;
+	
+	static {
+		LOGGER = LoggerFactory.getLogger(BotManager.class);
+	}
+	
 	private IDiscordClient client = null;
 	private SubclassPool<ModuleBase> moduleClassPool = null;
 	private ConfigStream configStream = null;
@@ -40,15 +48,15 @@ public class BotManager {
 		final BotConfig config = configStream.getConfig();
 		
 		if (config.token.isEmpty()) {
-			System.out.println("Token field is empty (a new config file was probably created)");
-			System.out.print("Please input a token to continue: ");
+			LOGGER.info("Token field is empty (a new config file was probably created)");
+			LOGGER.info("Please input a token to continue:");
 			
 			Scanner scanner = new Scanner(System.in);
 			String inputToken = scanner.next();
 			scanner.close();
 			
-			System.out.println("Token will be set to: " + inputToken);
-			System.out.println("If you made a mistake, just delete the config file to start over");
+			LOGGER.info("Token will be set to: " + inputToken);
+			LOGGER.info("If you made a mistake, just delete the config file to start over");
 			
 			config.token = inputToken;
 			saveConfig(); // use non error propagating saving method
@@ -61,11 +69,11 @@ public class BotManager {
 		Set<Class<? extends ModuleBase>> detectedModuleClasses = reflections.getSubTypesOf(ModuleBase.class);
 		
 		for (Class<? extends ModuleBase> moduleClass : detectedModuleClasses) {
-			System.out.println("Discovered module: " + moduleClass.getName());
+			LOGGER.info("Discovered module: " + moduleClass.getName());
 			moduleClassPool.registerClass(moduleClass);
 		}
 		
-		System.out.println("Registered " + moduleClassPool.getNumClasses() + " modules");
+		LOGGER.info("Registered " + moduleClassPool.getNumClasses() + " modules");
 		
 		// now login using the token
 		ClientBuilder builder = new ClientBuilder();
@@ -105,7 +113,7 @@ public class BotManager {
 		
 		// if we don't have a config for this guild yet, this is the first connection, so create it		
 		if (configStream.getConfig().guilds.putIfAbsent(guildId, new GuildConfig()) == null) {
-			System.out.println("Created new guild config for new guild: " + event.getGuild().getName());
+			LOGGER.info("Created new guild config for new guild: " + event.getGuild().getName());
 			saveConfig();
 		}
 		
@@ -126,7 +134,7 @@ public class BotManager {
 		Bot botInstance = botInstances.get(event.getGuild().getLongID());
 		
 		if (botInstance == null) {
-			System.err.println("WARNING: Received message from an unmapped guild!");
+			LOGGER.warn("Received message from an unmapped guild!");
 			return;
 		}
 		

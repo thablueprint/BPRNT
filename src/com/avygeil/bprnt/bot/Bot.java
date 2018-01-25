@@ -6,6 +6,9 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.avygeil.bprnt.config.GuildConfig;
 import com.avygeil.bprnt.config.ModuleConfig;
 import com.avygeil.bprnt.module.Module;
@@ -17,6 +20,12 @@ import sx.blah.discord.handle.obj.IMessage;
 import sx.blah.discord.handle.obj.IUser;
 
 public class Bot {
+	
+	public static final Logger LOGGER;
+	
+	static {
+		LOGGER = LoggerFactory.getLogger(Bot.class);
+	}
 	
 	private final BotManager manager;
 	private final GuildConfig config;
