@@ -4,7 +4,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Scanner;
 
+import com.avygeil.bprnt.config.BotConfig;
 import com.avygeil.bprnt.config.ConfigStream;
 
 import sx.blah.discord.api.ClientBuilder;
@@ -16,45 +18,47 @@ import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedE
 import sx.blah.discord.util.DiscordException;
 
 public class BotManager {
-
-	public static void main(String[] args) {
-		if (args.length < 1) {
-			throw new IllegalArgumentException();
-		}
-		
-		IDiscordClient client = null;
-		
-		try {
-			ClientBuilder builder = new ClientBuilder();
-			builder.withToken(args[0]);
-			client = builder.login();
-		} catch (DiscordException e) {
-			e.printStackTrace();
-		}
-		
-		if (client != null) {
-			new BotManager(client).Run();
-		}
-	}
 	
-	private IDiscordClient client;
+	private IDiscordClient client = null;
+	private ConfigStream configStream = null;
 	
 	// une instance de bot par id de guilde
 	private Map<Long, Bot> botInstances = new HashMap<>();
 	
-	public BotManager(IDiscordClient client) {
-		this.client = client;
+	public void initialize() throws IOException, DiscordException {
+		// read the config first
+		configStream = new ConfigStream(new File("config.emoji"));
+		configStream.read();
+		
+		final BotConfig config = configStream.getConfig();
+		
+		if (config.token.isEmpty()) {
+			System.out.println("Token field is empty (a new config file was probably created)");
+			System.out.print("Please input a token to continue: ");
+			
+			Scanner scanner = new Scanner(System.in);
+			String inputToken = scanner.next();
+			scanner.close();
+			
+			System.out.println("Token will be set to: " + inputToken);
+			System.out.println("If you made a mistake, just delete the config file to start over");
+			
+			config.token = inputToken;
+			configStream.save();
+		}
+		
+		// now login using the token
+		ClientBuilder builder = new ClientBuilder();
+		builder.withToken(config.token);
+		client = builder.login();
 	}
 	
-	public void Run() {
-		client.getDispatcher().registerListener(this);
-		ConfigStream testConfig = new ConfigStream(new File("config.emoji"));
+	public void start() {
+		if (client == null) {
+			throw new UnsupportedOperationException();
+		}
 		
-		try {
-			testConfig.read();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}	
+		client.getDispatcher().registerListener(this);
 	}
 	
 	@EventSubscriber
