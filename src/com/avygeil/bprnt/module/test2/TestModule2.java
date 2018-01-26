@@ -1,5 +1,7 @@
 package com.avygeil.bprnt.module.test2;
 
+import java.io.File;
+
 import com.avygeil.bprnt.bot.Bot;
 import com.avygeil.bprnt.command.CommandFactory;
 import com.avygeil.bprnt.command.CommandStore;
@@ -12,8 +14,8 @@ import sx.blah.discord.handle.obj.IUser;
 
 public class TestModule2 extends ModuleBase {
 
-	public TestModule2(Bot botInstance, ModuleConfig config) {
-		super(botInstance, config);
+	public TestModule2(Bot botInstance, ModuleConfig config, File dataFolder) {
+		super(botInstance, config, dataFolder);
 	}
 	
 	@Override

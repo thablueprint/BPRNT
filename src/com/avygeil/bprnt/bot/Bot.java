@@ -1,7 +1,12 @@
 package com.avygeil.bprnt.bot;
 
+import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -20,6 +25,7 @@ import com.avygeil.bprnt.permission.SimplePermissionsHandler;
 import com.avygeil.bprnt.util.SubclassPool;
 
 import sx.blah.discord.handle.obj.IChannel;
+import sx.blah.discord.handle.obj.IGuild;
 import sx.blah.discord.handle.obj.IMessage;
 import sx.blah.discord.handle.obj.IUser;
 
@@ -32,14 +38,16 @@ public class Bot {
 	}
 	
 	private final BotManager manager;
+	private final IGuild thisGuild;
 	
 	private final GuildConfig config;
 	private PermissionsHandler permissionsHandler = null;
 	private CommandStore commandStore = null;
 	private List<Module> moduleInstances = new ArrayList<>();
 	
-	public Bot(BotManager manager, GuildConfig config) {
+	public Bot(BotManager manager, IGuild thisGuild, GuildConfig config) {
 		this.manager = manager;
+		this.thisGuild = thisGuild;
 		this.config = config;
 	}
 	
@@ -74,14 +82,25 @@ public class Bot {
 				continue;
 			}
 			
+			// each module instance has a specific data folder based on its class name -> guild instance
+			
+			File moduleDataFolder = null;
+			
+			try {
+				final Path moduleDataPath = Paths.get("data", clazz.getName(), Long.toString(thisGuild.getLongID()));
+				moduleDataFolder = Files.createDirectories(moduleDataPath).toFile();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			
 			// enforce a specific constructor for the class...
 			// if the class doesn't exactly implement the constructor, it should logically revert
 			// to the base constructor (which would be forced to being accessible), but all classes
 			// should technically implement this specific constructor because the base one is protected
 			try {
-				Constructor<? extends ModuleBase> constructor = clazz.getConstructor(Bot.class, ModuleConfig.class);
+				Constructor<? extends ModuleBase> constructor = clazz.getConstructor(Bot.class, ModuleConfig.class, File.class);
 				constructor.setAccessible(true);
-				moduleInstances.add(constructor.newInstance(this, moduleConfig));
+				moduleInstances.add(constructor.newInstance(this, moduleConfig, moduleDataFolder));
 			} catch (NoSuchMethodException | SecurityException | InstantiationException
 					| IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
 				e.printStackTrace();

@@ -29,4 +29,5 @@ hs_err_pid*
 /target/
 
 # Project specific files
+/data/
 *.emoji

@@ -1,5 +1,11 @@
 package com.avygeil.bprnt.module.test;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+
+import org.apache.commons.io.FileUtils;
+
 import com.avygeil.bprnt.bot.Bot;
 import com.avygeil.bprnt.command.CommandFactory;
 import com.avygeil.bprnt.command.CommandStore;
@@ -11,9 +17,12 @@ import sx.blah.discord.handle.obj.IMessage;
 import sx.blah.discord.handle.obj.IUser;
 
 public class TestModule extends ModuleBase {
+	
+	private final File testFile;
 
-	public TestModule(Bot botInstance, ModuleConfig config) {
-		super(botInstance, config);
+	public TestModule(Bot botInstance, ModuleConfig config, File dataFolder) {
+		super(botInstance, config, dataFolder);
+		testFile = new File(dataFolder, "testlog.txt");
 	}
 	
 	@Override
@@ -34,7 +43,11 @@ public class TestModule extends ModuleBase {
 
 	@Override
 	public void handleMessage(IUser sender, IChannel channel, IMessage message) {
-		System.out.println("author: " + sender.getName());
+		try {
+			FileUtils.writeStringToFile(testFile, message.getAuthor().getName() + ": " + message.getContent() + "\n", StandardCharsets.UTF_8, true);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	private void onBarCommand(String[] args, IUser sender, IChannel channel, IMessage message) {

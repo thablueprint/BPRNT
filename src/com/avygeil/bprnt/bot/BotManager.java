@@ -125,7 +125,7 @@ public class BotManager {
 		
 		// create the new instance
 		final GuildConfig instanceConfig = configStream.getConfig().guilds.get(guildId); // should never be null
-		final Bot newBotInstance = new Bot(this, instanceConfig);
+		final Bot newBotInstance = new Bot(this, event.getGuild(), instanceConfig);
 		newBotInstance.initialize();
 		botInstances.put(guildId, newBotInstance);
 	}
