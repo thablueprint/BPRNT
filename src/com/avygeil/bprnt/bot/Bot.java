@@ -56,7 +56,7 @@ public class Bot {
 		
 		final PermissionsConfig permissionsConfig = config.permissions;
 		
-		permissionsHandler = new SimplePermissionsHandler(permissionsConfig)
+		permissionsHandler = new SimplePermissionsHandler(this, permissionsConfig)
 				.setGlobalAdmins(manager.getGlobalAdmins())
 				.setLocalAdmins(getLocalAdmins());
 		
@@ -121,6 +121,10 @@ public class Bot {
 		
 		// convenience method to give modules a chance to register their commands early on
 		moduleInstances.forEach(m -> m.registerCommands(commandStore));
+	}
+	
+	public IGuild getGuild() {
+		return thisGuild;
 	}
 	
 	public List<Long> getLocalAdmins() {
