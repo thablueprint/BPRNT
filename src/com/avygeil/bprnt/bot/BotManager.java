@@ -40,8 +40,8 @@ public class BotManager {
 	private SubclassPool<ModuleBase> moduleClassPool = null;
 	
 	// une instance de bot par id de guilde
-	private Map<Long, Bot> botInstances = new HashMap<>();
-	
+	private final Map<Long, Bot> botInstances = new HashMap<>();
+		
 	public void initialize() throws IOException, DiscordException {
 		// read the config first
 		configStream = new ConfigStream(new File("config.emoji"));

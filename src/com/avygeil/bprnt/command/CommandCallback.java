@@ -6,5 +6,7 @@ import sx.blah.discord.handle.obj.IUser;
 
 @FunctionalInterface
 public interface CommandCallback {
+	
 	void call(String[] args, IUser sender, IChannel channel, IMessage message);
+	
 }

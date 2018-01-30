@@ -10,8 +10,13 @@ public interface Module {
 	
 	int getPriority();
 	
+	boolean load();
+	void unload();
+	
 	void registerCommands(CommandStore store);
 	
+	void handleModuleLoad(Module module);
+	void handleModuleUnload(Module module);
 	void handleMessage(IUser sender, IChannel channel, IMessage message);
 
 }

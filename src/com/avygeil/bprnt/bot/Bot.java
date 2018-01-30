@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -93,14 +94,17 @@ public class Bot {
 				e.printStackTrace();
 			}
 			
+			// create a logger instance for this module
+			final Logger moduleLogger = LoggerFactory.getLogger(clazz.getSimpleName() + "#" + thisGuild.getName());
+			
 			// enforce a specific constructor for the class...
 			// if the class doesn't exactly implement the constructor, it should logically revert
 			// to the base constructor (which would be forced to being accessible), but all classes
 			// should technically implement this specific constructor because the base one is protected
 			try {
-				Constructor<? extends ModuleBase> constructor = clazz.getConstructor(Bot.class, ModuleConfig.class, File.class);
+				Constructor<? extends ModuleBase> constructor = clazz.getConstructor(Bot.class, ModuleConfig.class, File.class, Logger.class);
 				constructor.setAccessible(true);
-				moduleInstances.add(constructor.newInstance(this, moduleConfig, moduleDataFolder));
+				moduleInstances.add(constructor.newInstance(this, moduleConfig, moduleDataFolder, moduleLogger));
 			} catch (NoSuchMethodException | SecurityException | InstantiationException
 					| IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
 				e.printStackTrace();
@@ -119,8 +123,35 @@ public class Bot {
 			
 		});
 		
+		// load modules
+		
+		Iterator<Module> it = moduleInstances.iterator();
+		
+		while (it.hasNext()) {
+			final Module currentModule = it.next();
+			
+			// remove the module from the list if it failed to load
+			if (!currentModule.load()) {
+				currentModule.unload();
+				it.remove();
+				continue;
+			}
+		}
+		
+		// now that we have the full module list, broadcast the load event
+		moduleInstances.forEach(cm -> {
+			moduleInstances.forEach(om -> {
+				if (om == cm) return;
+				om.handleModuleLoad(cm);
+			});
+		});
+		
 		// convenience method to give modules a chance to register their commands early on
-		moduleInstances.forEach(m -> m.registerCommands(commandStore));
+		moduleInstances.forEach(module -> module.registerCommands(commandStore));
+	}
+	
+	public BotManager getManager() {
+		return manager;
 	}
 	
 	public IGuild getGuild() {

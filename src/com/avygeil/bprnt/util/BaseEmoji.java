@@ -5,7 +5,10 @@ import java.util.Base64;
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 
-public class BaseEmoji {
+public final class BaseEmoji {
+	
+	private BaseEmoji() {
+	}
 	
 	private static BidiMap<Character, String> emojiMap = new DualHashBidiMap<>();
 	
