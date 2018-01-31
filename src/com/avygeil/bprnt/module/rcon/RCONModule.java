@@ -183,19 +183,17 @@ public class RCONModule extends ModuleBase {
 			return;
 		}
 		
-		if (!rconClient.isAuthenticated(serverInfo.address)) {
-			SourceRconAuthStatus authStatus = rconClient.authenticate(serverInfo.address, serverInfo.password).join();
+		SourceRconAuthStatus authStatus = rconClient.authenticate(serverInfo.address, serverInfo.password).join();
+		
+		if (!authStatus.isAuthenticated()) {
+			String reason = authStatus.getReason();
 			
-			if (!authStatus.isAuthenticated()) {
-				String reason = authStatus.getReason();
-				
-				if (reason.isEmpty()) {
-					reason = "RCON password might be invalid"; // default reason
-				}
-				
-				message.reply("Failed to authenticate! " + reason);
-				return;
+			if (reason.isEmpty()) {
+				reason = "RCON password might be invalid"; // default reason
 			}
+			
+			message.reply("Failed to authenticate! " + reason);
+			return;
 		}
 
 		final String rconCommand = StringUtils.join(args, ' ', 1, args.length);
