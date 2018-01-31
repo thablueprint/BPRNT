@@ -26,21 +26,39 @@ public class CommandStore {
 		this.permissionsHandler = permissionsHandler;
 	}
 	
+	public String getPrefix() {
+		return commandPrefix;
+	}
+	
 	public boolean hasCommand(String commandName) {
-		return commands.containsKey(commandName);
+		return commands.containsKey(commandName.toLowerCase());
 	}
 	
 	public void registerCommand(Command command) {
 		commands.put(command.getCommandName().toLowerCase(), command);
 	}
 	
-	public void handleCommand(IUser sender, IChannel channel, IMessage message) {
-		String content = message.getContent().trim();
+	public void unregisterCommand(String commandName) {
+		commands.remove(commandName.toLowerCase());
+	}
+	
+	public void handleMessage(IUser sender, IChannel channel, IMessage message) {
+		final String content = message.getContent().trim();
 		
 		if (!content.startsWith(commandPrefix)) {
 			return; // not a valid command
 		}
 		
+		dispatchCommand(sender, channel, message, content.substring(commandPrefix.length()));
+	}
+	
+	/*
+	 * This method is used to dispatch a command regardless of the command prefix
+	 * Message may not refer to a strictly correct message, but rather the message
+	 * that "triggered" the command (this could be an aliased command, for instance),
+	 * so use with caution
+	 */
+	public void dispatchCommand(IUser sender, IChannel channel, IMessage message, String content) {		
 		// for now, just split in two parts for efficiency: <command> <arguments>
 		final String[] commandParts = StringUtils.split(content, null, 2);
 		
@@ -49,7 +67,7 @@ public class CommandStore {
 		}
 		
 		// get the command name without the prefix part
-		final String commandName = commandParts[0].trim().substring(commandPrefix.length());
+		final String commandName = commandParts[0].trim();
 		
 		if (commandName.isEmpty()) {
 			return; // we probably typed the prefix alone
@@ -72,7 +90,7 @@ public class CommandStore {
 		
 		final String[] args = StringUtils.split(commandParts.length > 1 ? commandParts[1].trim() : "");
 		
-		command.invoke(args, sender, channel, message);
+		command.invoke(commandName, args, sender, channel, message);
 	}
 
 }

@@ -148,6 +148,9 @@ public class Bot {
 		
 		// convenience method to give modules a chance to register their commands early on
 		moduleInstances.forEach(module -> module.registerCommands(commandStore));
+		
+		// post load callback
+		moduleInstances.forEach(module -> module.postLoad());
 	}
 	
 	public BotManager getManager() {
@@ -158,13 +161,17 @@ public class Bot {
 		return thisGuild;
 	}
 	
+	public CommandStore getCommandStore() {
+		return commandStore;
+	}
+	
 	public List<Long> getLocalAdmins() {
 		return config.admins;
 	}
 	
 	public void onMessageReceived(IUser sender, IChannel channel, IMessage message) {
 		// first, handle commands
-		commandStore.handleCommand(sender, channel, message);
+		commandStore.handleMessage(sender, channel, message);
 		
 		// even if the command was handled, we still fire a message event (so modules like loggers still work)
 		for (Module module : moduleInstances) {

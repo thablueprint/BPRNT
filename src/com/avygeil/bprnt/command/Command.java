@@ -28,8 +28,8 @@ public class Command {
 		return permission;
 	}
 	
-	public void invoke(String[] args, IUser sender, IChannel channel, IMessage message) {
-		callback.call(args, sender, channel, message);
+	public void invoke(String command, String[] args, IUser sender, IChannel channel, IMessage message) {
+		callback.call(command, args, sender, channel, message);
 	}
 	
 }

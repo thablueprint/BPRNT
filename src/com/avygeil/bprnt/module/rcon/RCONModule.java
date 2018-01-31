@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 
 import com.avygeil.bprnt.bot.Bot;
@@ -40,29 +39,35 @@ public class RCONModule extends ModuleBase {
 
 	@Override
 	public boolean load() {
+		// TODO Auto-generated method stub
+		return true;
+	}
+	
+	@Override
+	public void postLoad() {
 		// parse config properties to build the info map
-		
+
 		for (Map.Entry<String, String> property : config.properties.entrySet()) {
 			final RCONServerInfo serverInfo;
-			
+
 			try {
 				serverInfo = RCONServerInfo.fromPropertyString(property.getKey(), property.getValue());
 			} catch (IllegalArgumentException e) {
-				LOGGER.error("Malformed RCON server info property: \"" + property.getKey() + "\"=\"" + property.getValue() + "\"");
+				LOGGER.error("Malformed RCON server info property: \"" + property.getKey() + "\"=\""
+						+ property.getValue() + "\"");
 				continue;
 			}
-			
+
 			infoMap.put(serverInfo.name.toLowerCase(), serverInfo); // case insensitive
 			LOGGER.info("Loaded RCON server info for \"" + serverInfo.name + "\"");
 		}
-		
+
 		rconClient = new SourceRconClient();
-		
-		return true;
 	}
 
 	@Override
 	public void unload() {
+		// TODO Auto-generated method stub
 	}
 
 	@Override
@@ -96,7 +101,7 @@ public class RCONModule extends ModuleBase {
 		);
 	}
 	
-	public void bindRCONServerCommand(String[] args, IUser sender, IChannel channel, IMessage message) {
+	public void bindRCONServerCommand(String command, String[] args, IUser sender, IChannel channel, IMessage message) {
 		if (args.length < 2) {
 			message.reply("Usage: `!bindRCONServer <name> <ip[:port]> [rconpassword]`");
 			return;
@@ -127,7 +132,7 @@ public class RCONModule extends ModuleBase {
 		message.reply("Bound RCON server \"" + serverInfo.name + "\" successfully");
 	}
 	
-	public void unbindRCONServerCommand(String[] args, IUser sender, IChannel channel, IMessage message) {
+	public void unbindRCONServerCommand(String command, String[] args, IUser sender, IChannel channel, IMessage message) {
 		if (infoMap.isEmpty()) {
 			message.reply("No servers are bound yet");
 			return;
@@ -152,7 +157,7 @@ public class RCONModule extends ModuleBase {
 		message.reply("Unbound server \"" + serverInfo.name + "\" successfully");
 	}
 	
-	public void boundRCONServersCommand(String[] args, IUser sender, IChannel channel, IMessage message) {
+	public void boundRCONServersCommand(String command, String[] args, IUser sender, IChannel channel, IMessage message) {
 		if (infoMap.isEmpty()) {
 			message.reply("No servers are bound yet");
 		} else {
@@ -160,7 +165,7 @@ public class RCONModule extends ModuleBase {
 		}
 	}
 	
-	public void rconCommand(String[] args, IUser sender, IChannel channel, IMessage message) {					
+	public void rconCommand(String command, String[] args, IUser sender, IChannel channel, IMessage message) {					
 		if (infoMap.isEmpty()) {
 			message.reply("No RCON server configured yet");
 			return;
@@ -192,7 +197,7 @@ public class RCONModule extends ModuleBase {
 				return;
 			}
 		}
-		
+
 		final String rconCommand = StringUtils.join(args, ' ', 1, args.length);
 		
 		try {

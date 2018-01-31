@@ -35,6 +35,11 @@ public class SimplePermissionsHandler implements PermissionsHandler {
 
 	@Override
 	public boolean hasPermission(IUser user, String permissionString) {
+		// everyone has the empty permission
+		if (permissionString.isEmpty()) {
+			return true;
+		}
+		
 		// guild admins bypass all permission checks by default
 		if (user.getPermissionsForGuild(bot.getGuild()).contains(Permissions.ADMINISTRATOR)) {
 			return true;

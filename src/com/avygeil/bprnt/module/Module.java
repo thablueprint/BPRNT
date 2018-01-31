@@ -11,6 +11,7 @@ public interface Module {
 	int getPriority();
 	
 	boolean load();
+	void postLoad();
 	void unload();
 	
 	void registerCommands(CommandStore store);
