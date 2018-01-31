@@ -1,5 +1,7 @@
 package com.avygeil.bprnt.module;
 
+import java.time.LocalDateTime;
+
 import com.avygeil.bprnt.command.CommandStore;
 
 import sx.blah.discord.handle.obj.IChannel;
@@ -21,5 +23,7 @@ public interface Module {
 	void handleModuleUnload(Module module);
 	void handleMessage(IUser sender, IChannel channel, IMessage message);
 	void handleReactionAdd(IUser sender, IChannel channel, IMessage message, IReaction reaction);
+	void handleUserJoin(IUser user, LocalDateTime joinTime);
+	void handleUserLeave(IUser user);
 
 }

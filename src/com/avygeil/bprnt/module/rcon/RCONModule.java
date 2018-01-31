@@ -2,6 +2,7 @@ package com.avygeil.bprnt.module.rcon;
 
 import java.io.File;
 import java.net.InetSocketAddress;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -228,6 +229,16 @@ public class RCONModule extends ModuleBase {
 
 	@Override
 	public void handleReactionAdd(IUser sender, IChannel channel, IMessage message, IReaction reaction) {
+		// TODO Auto-generated method stub
+	}
+
+	@Override
+	public void handleUserJoin(IUser user, LocalDateTime joinTime) {
+		// TODO Auto-generated method stub
+	}
+
+	@Override
+	public void handleUserLeave(IUser user) {
 		// TODO Auto-generated method stub
 	}
 

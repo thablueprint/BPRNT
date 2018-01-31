@@ -7,6 +7,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -180,6 +181,14 @@ public class Bot {
 	
 	public void onReactionAdd(IUser sender, IChannel channel, IMessage message, IReaction reaction) {
 		moduleInstances.forEach(m -> m.handleReactionAdd(sender, channel, message, reaction));
+	}
+	
+	public void onUserJoin(IUser user, LocalDateTime joinTime) {
+		moduleInstances.forEach(m -> m.handleUserJoin(user, joinTime));
+	}
+	
+	public void onUserLeave(IUser user) {
+		moduleInstances.forEach(m -> m.handleUserLeave(user));
 	}
 
 }

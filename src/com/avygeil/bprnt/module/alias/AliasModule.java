@@ -1,6 +1,7 @@
 package com.avygeil.bprnt.module.alias;
 
 import java.io.File;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -246,6 +247,16 @@ public class AliasModule extends ModuleBase {
 
 	@Override
 	public void handleReactionAdd(IUser sender, IChannel channel, IMessage message, IReaction reaction) {
+		// TODO Auto-generated method stub
+	}
+
+	@Override
+	public void handleUserJoin(IUser user, LocalDateTime joinTime) {
+		// TODO Auto-generated method stub
+	}
+
+	@Override
+	public void handleUserLeave(IUser user) {
 		// TODO Auto-generated method stub
 	}	
 

@@ -26,6 +26,8 @@ import sx.blah.discord.handle.impl.events.guild.GuildCreateEvent;
 import sx.blah.discord.handle.impl.events.guild.GuildLeaveEvent;
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
 import sx.blah.discord.handle.impl.events.guild.channel.message.reaction.ReactionAddEvent;
+import sx.blah.discord.handle.impl.events.guild.member.UserJoinEvent;
+import sx.blah.discord.handle.impl.events.guild.member.UserLeaveEvent;
 import sx.blah.discord.util.DiscordException;
 
 public class BotManager {
@@ -147,6 +149,18 @@ public class BotManager {
 	public void onReactionAddEvent(ReactionAddEvent event) {
 		Optional<Bot> botInstance = Optional.ofNullable(botInstances.get(event.getGuild().getLongID()));
 		botInstance.ifPresent(b -> b.onReactionAdd(event.getAuthor(), event.getChannel(), event.getMessage(), event.getReaction()));
+	}
+	
+	@EventSubscriber
+	public void onUserJoinEvent(UserJoinEvent event) {
+		Optional<Bot> botInstance = Optional.ofNullable(botInstances.get(event.getGuild().getLongID()));
+		botInstance.ifPresent(b -> b.onUserJoin(event.getUser(), event.getJoinTime()));
+	}
+	
+	@EventSubscriber
+	public void onUserLeaveEvent(UserLeaveEvent event) {
+		Optional<Bot> botInstance = Optional.ofNullable(botInstances.get(event.getGuild().getLongID()));
+		botInstance.ifPresent(b -> b.onUserLeave(event.getUser()));
 	}
 
 }
