@@ -28,6 +28,7 @@ import com.avygeil.bprnt.util.SubclassPool;
 import sx.blah.discord.handle.obj.IChannel;
 import sx.blah.discord.handle.obj.IGuild;
 import sx.blah.discord.handle.obj.IMessage;
+import sx.blah.discord.handle.obj.IReaction;
 import sx.blah.discord.handle.obj.IUser;
 
 public class Bot {
@@ -174,9 +175,11 @@ public class Bot {
 		commandStore.handleMessage(sender, channel, message);
 		
 		// even if the command was handled, we still fire a message event (so modules like loggers still work)
-		for (Module module : moduleInstances) {
-			module.handleMessage(sender, channel, message);
-		}
+		moduleInstances.forEach(m -> m.handleMessage(sender, channel, message));
+	}
+	
+	public void onReactionAdd(IUser sender, IChannel channel, IMessage message, IReaction reaction) {
+		moduleInstances.forEach(m -> m.handleReactionAdd(sender, channel, message, reaction));
 	}
 
 }

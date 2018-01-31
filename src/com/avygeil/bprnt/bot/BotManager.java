@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Scanner;
 import java.util.Set;
 
@@ -24,6 +25,7 @@ import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.handle.impl.events.guild.GuildCreateEvent;
 import sx.blah.discord.handle.impl.events.guild.GuildLeaveEvent;
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
+import sx.blah.discord.handle.impl.events.guild.channel.message.reaction.ReactionAddEvent;
 import sx.blah.discord.util.DiscordException;
 
 public class BotManager {
@@ -137,14 +139,14 @@ public class BotManager {
 	
 	@EventSubscriber
 	public void onMessageReceivedEvent(MessageReceivedEvent event) {
-		Bot botInstance = botInstances.get(event.getGuild().getLongID());
-		
-		if (botInstance == null) {
-			LOGGER.warn("Received message from an unmapped guild!");
-			return;
-		}
-		
-		botInstance.onMessageReceived(event.getAuthor(), event.getChannel(), event.getMessage());
+		Optional<Bot> botInstance = Optional.ofNullable(botInstances.get(event.getGuild().getLongID()));
+		botInstance.ifPresent(b -> b.onMessageReceived(event.getAuthor(), event.getChannel(), event.getMessage()));
+	}
+	
+	@EventSubscriber
+	public void onReactionAddEvent(ReactionAddEvent event) {
+		Optional<Bot> botInstance = Optional.ofNullable(botInstances.get(event.getGuild().getLongID()));
+		botInstance.ifPresent(b -> b.onReactionAdd(event.getAuthor(), event.getChannel(), event.getMessage(), event.getReaction()));
 	}
 
 }

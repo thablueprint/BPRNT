@@ -20,6 +20,7 @@ import com.avygeil.bprnt.module.ModuleBase;
 
 import sx.blah.discord.handle.obj.IChannel;
 import sx.blah.discord.handle.obj.IMessage;
+import sx.blah.discord.handle.obj.IReaction;
 import sx.blah.discord.handle.obj.IUser;
 
 public class AliasModule extends ModuleBase {
@@ -240,6 +241,11 @@ public class AliasModule extends ModuleBase {
 
 	@Override
 	public void handleMessage(IUser sender, IChannel channel, IMessage message) {
+		// TODO Auto-generated method stub
+	}
+
+	@Override
+	public void handleReactionAdd(IUser sender, IChannel channel, IMessage message, IReaction reaction) {
 		// TODO Auto-generated method stub
 	}	
 

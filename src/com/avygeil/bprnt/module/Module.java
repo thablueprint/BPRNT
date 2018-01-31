@@ -4,6 +4,7 @@ import com.avygeil.bprnt.command.CommandStore;
 
 import sx.blah.discord.handle.obj.IChannel;
 import sx.blah.discord.handle.obj.IMessage;
+import sx.blah.discord.handle.obj.IReaction;
 import sx.blah.discord.handle.obj.IUser;
 
 public interface Module {
@@ -19,5 +20,6 @@ public interface Module {
 	void handleModuleLoad(Module module);
 	void handleModuleUnload(Module module);
 	void handleMessage(IUser sender, IChannel channel, IMessage message);
+	void handleReactionAdd(IUser sender, IChannel channel, IMessage message, IReaction reaction);
 
 }
