@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 
 import com.avygeil.bprnt.bot.Bot;
 import com.avygeil.bprnt.command.CommandFactory;
+import com.avygeil.bprnt.command.CommandPriority;
 import com.avygeil.bprnt.command.CommandStore;
 import com.avygeil.bprnt.config.ModuleConfig;
 import com.avygeil.bprnt.module.Module;
@@ -34,7 +35,7 @@ public class RCONModule extends ModuleBase {
 
 	@Override
 	public int getPriority() {
-		return 0;
+		return CommandPriority.NORMAL;
 	}
 
 	@Override
