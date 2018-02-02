@@ -12,9 +12,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
 import com.avygeil.bprnt.bot.Bot;
+import com.avygeil.bprnt.command.Command;
 import com.avygeil.bprnt.command.CommandFactory;
+import com.avygeil.bprnt.command.CommandFormat;
 import com.avygeil.bprnt.command.CommandPriority;
 import com.avygeil.bprnt.command.CommandStore;
+import com.avygeil.bprnt.command.SimpleCommand;
 import com.avygeil.bprnt.config.ModuleConfig;
 import com.avygeil.bprnt.module.Module;
 import com.avygeil.bprnt.module.ModuleBase;
@@ -72,29 +75,25 @@ public class AliasModule extends ModuleBase {
 
 	@Override
 	public void registerCommands(CommandStore store) {
-		store.registerCommand(new CommandFactory()
-			.setCommandName("setAlias")
-			.setPermission("alias.command.setalias")
-			.setCallback(this::setAliasCommand)
-			.build()
-		);
-		
-		store.registerCommand(new CommandFactory()
-			.setCommandName("removeAlias")
-			.setPermission("alias.command.removealias")
-			.setCallback(this::removeAliasCommand)
-			.build()
-		);
-		
-		store.registerCommand(new CommandFactory()
-			.setCommandName("listAliases")
-			.setPermission("alias.command.listaliases")
-			.setCallback(this::listAliasesCommand)
-			.build()
+		store.registerCommands(new CommandFactory()
+			.newParentCommand("alias")
+				.newSubcommand("set")
+					.withPermission("command.alias.set")
+					.setCallback(this::setAliasCommand)
+					.done()
+				.newSubcommand("remove")
+					.withPermission("command.alias.remove")
+					.setCallback(this::removeAliasCommand)
+					.done()
+				.newSubcommand("list")
+					.withPermission("command.alias.list")
+					.setCallback(this::listAliasesCommand)
+					.done()
+				.done()
 		);
 	}
 	
-	public void setAliasCommand(String command, String[] args, IUser sender, IChannel channel, IMessage message) {
+	public void setAliasCommand(Command cmd, String[] args, IUser sender, IChannel channel, IMessage message) {
 		if (args.length < 2) {
 			message.reply("Usage: `!setAlias <alias> <aliasedCmd ...>`");
 			return;
@@ -111,7 +110,7 @@ public class AliasModule extends ModuleBase {
 		message.reply("Alias \"" + alias + "\" set successfully");
 	}
 	
-	public void removeAliasCommand(String command, String[] args, IUser sender, IChannel channel, IMessage message) {
+	public void removeAliasCommand(Command cmd, String[] args, IUser sender, IChannel channel, IMessage message) {
 		if (args.length < 1) {
 			message.reply("Usage: `!removeAlias <alias>`");
 			return;
@@ -124,7 +123,7 @@ public class AliasModule extends ModuleBase {
 		}
 	}
 	
-	public void listAliasesCommand(String command, String[] args, IUser sender, IChannel channel, IMessage message) {
+	public void listAliasesCommand(Command cmd, String[] args, IUser sender, IChannel channel, IMessage message) {
 		if (config.properties.isEmpty()) {
 			message.reply("No alias set yet");
 			return;
@@ -167,12 +166,12 @@ public class AliasModule extends ModuleBase {
 		message.reply(sb.toString());
 	}
 	
-	public void aliasCommand(String command, String[] args, IUser sender, IChannel channel, IMessage message) {
-		if (!activeAliases.contains(command.toLowerCase())) {
+	public void aliasCommand(Command cmd, String[] args, IUser sender, IChannel channel, IMessage message) {
+		if (!activeAliases.contains(cmd.getCommandName().toLowerCase())) {
 			return;
 		}
 		
-		final String aliasedCmd = config.properties.get(command.toLowerCase());
+		final String aliasedCmd = config.properties.get(cmd.getCommandName().toLowerCase());
 		
 		if (aliasedCmd == null) {
 			return; // this should never happen
@@ -198,12 +197,9 @@ public class AliasModule extends ModuleBase {
 		}
 		
 		activeAliases.add(alias);
-		commandStore.registerCommand(new CommandFactory()
-			.setCommandName(alias)
-			.setPermission("") // no permission because it will use the aliased command permission
-			.setCallback(this::aliasCommand)
-			.build()
-		);
+		
+		// TODO: see what to do with the command format here
+		commandStore.registerCommand(new SimpleCommand(alias, "", this::aliasCommand, new CommandFormat()));
 		
 		if (updateConfig) {
 			config.properties.put(alias.toLowerCase(), aliasedCmd);

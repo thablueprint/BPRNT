@@ -1,11 +1,13 @@
 package com.avygeil.bprnt.command;
 
-import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.apache.commons.lang3.StringUtils;
 
+import com.avygeil.bprnt.permission.NoPermissionException;
 import com.avygeil.bprnt.permission.PermissionsHandler;
+import com.avygeil.bprnt.util.FormatUtils;
 
 import sx.blah.discord.handle.obj.IChannel;
 import sx.blah.discord.handle.obj.IMessage;
@@ -15,7 +17,7 @@ public class CommandStore {
 	
 	private final String commandPrefix;
 	private final PermissionsHandler permissionsHandler;
-	private final Map<String, Command> commands = new HashMap<>();
+	private final Map<String, Command> commands = new CaseInsensitiveMap<>();
 	
 	public CommandStore(String commandPrefix, PermissionsHandler permissionsHandler) {
 		if (commandPrefix.length() == 0 ) {
@@ -31,15 +33,27 @@ public class CommandStore {
 	}
 	
 	public boolean hasCommand(String commandName) {
-		return commands.containsKey(commandName.toLowerCase());
+		return commands.containsKey(commandName);
+	}
+	
+	public Command getCommandByName(String commandName) {
+		return commands.get(commandName);
 	}
 	
 	public void registerCommand(Command command) {
-		commands.put(command.getCommandName().toLowerCase(), command);
+		commands.put(command.getCommandName(), command);
+	}
+	
+	public void registerCommands(CommandFactory factory) {
+		try {
+			factory.build().forEach(this::registerCommand);
+		} catch (IllegalStateException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	public void unregisterCommand(String commandName) {
-		commands.remove(commandName.toLowerCase());
+		commands.remove(commandName);
 	}
 	
 	public void handleMessage(IUser sender, IChannel channel, IMessage message) {
@@ -73,24 +87,42 @@ public class CommandStore {
 			return; // we probably typed the prefix alone
 		}
 		
-		// since command names are case insensitive, we search for it as lower case
-		final Command command = commands.get(commandName.toLowerCase());
+		final Command command = getCommandByName(commandName);
 		
 		if (command == null) {
 			return; // no such command in store
 		}
 		
-		// we know the command exists, so let's test for permissions before the rest
-		if (!permissionsHandler.hasPermission(sender, command.getPermission())) {
-			message.reply("You don't have permission to run this command");
-			return;
-		}
-		
 		// split arguments and invoke the command
+		final String[] args = FormatUtils.tokenize(commandParts.length > 1 ? commandParts[1].trim() : "");
 		
-		final String[] args = StringUtils.split(commandParts.length > 1 ? commandParts[1].trim() : "");
-		
-		command.invoke(commandName, args, sender, channel, message);
+		try {
+			command.invoke(permissionsHandler, args, sender, channel, message);
+		} catch (NoPermissionException e) {
+			if (!e.getPermissionString().isEmpty()) {
+				message.reply("You don't have permission to use this command (" + e.getPermissionString() + ")");
+			} else {
+				message.reply("You don't have permission to use this command");
+			}
+		} catch (InvalidUsageException e) {
+			final String details = e.getDetails();
+			final String correctUsage = e.getCorrectUsage();
+			
+			if (!details.isEmpty() || !correctUsage.isEmpty()) {
+				StringBuilder sb = new StringBuilder();
+				
+				if (!details.isEmpty()) {
+					sb.append(details);
+					if (!correctUsage.isEmpty()) sb.append("\n\n");
+				}
+				
+				if (!correctUsage.isEmpty()) {
+					sb.append(correctUsage);
+				}
+				
+				message.reply(sb.toString());
+			}
+		}
 	}
 
 }

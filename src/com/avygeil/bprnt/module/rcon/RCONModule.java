@@ -10,6 +10,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
 import com.avygeil.bprnt.bot.Bot;
+import com.avygeil.bprnt.command.Command;
 import com.avygeil.bprnt.command.CommandFactory;
 import com.avygeil.bprnt.command.CommandPriority;
 import com.avygeil.bprnt.command.CommandStore;
@@ -75,36 +76,29 @@ public class RCONModule extends ModuleBase {
 
 	@Override
 	public void registerCommands(CommandStore store) {
-		store.registerCommand(new CommandFactory()
-			.setCommandName("bindRCONServer")
-			.setPermission("rcon.command.bindrconserver")
-			.setCallback(this::bindRCONServerCommand)
-			.build()
-		);
-		
-		store.registerCommand(new CommandFactory()
-			.setCommandName("unbindRCONServer")
-			.setPermission("rcon.command.unbindrconserver")
-			.setCallback(this::unbindRCONServerCommand)
-			.build()
-		);
-		
-		store.registerCommand(new CommandFactory()
-			.setCommandName("boundRCONServers")
-			.setPermission("rcon.command.boundrconservers")
-			.setCallback(this::boundRCONServersCommand)
-			.build()
-		);
-		
-		store.registerCommand(new CommandFactory()
-			.setCommandName("rcon")
-			.setPermission("rcon.command.rcon")
-			.setCallback(this::rconCommand)
-			.build()
+		store.registerCommands(new CommandFactory()
+			.newParentCommand("rconConfig")
+				.newSubcommand("bind")
+					.withPermission("command.rconconfig.bind")
+					.setCallback(this::bindRCONServerCommand)
+					.done()
+				.newSubcommand("unbind")
+					.withPermission("command.rconconfig.unbind")
+					.setCallback(this::unbindRCONServerCommand)
+					.done()
+				.newSubcommand("list")
+					.withPermission("command.rconconfig.list")
+					.setCallback(this::listRCONServersCommand)
+					.done()
+				.done()
+			.newCommand("rcon")
+				.withPermission("command.rcon")
+				.setCallback(this::rconCommand)
+				.done()
 		);
 	}
 	
-	public void bindRCONServerCommand(String command, String[] args, IUser sender, IChannel channel, IMessage message) {
+	public void bindRCONServerCommand(Command cmd, String[] args, IUser sender, IChannel channel, IMessage message) {
 		if (args.length < 2) {
 			message.reply("Usage: `!bindRCONServer <name> <ip[:port]> [rconpassword]`");
 			return;
@@ -135,7 +129,7 @@ public class RCONModule extends ModuleBase {
 		message.reply("Bound RCON server \"" + serverInfo.name + "\" successfully");
 	}
 	
-	public void unbindRCONServerCommand(String command, String[] args, IUser sender, IChannel channel, IMessage message) {
+	public void unbindRCONServerCommand(Command cmd, String[] args, IUser sender, IChannel channel, IMessage message) {
 		if (infoMap.isEmpty()) {
 			message.reply("No servers are bound yet");
 			return;
@@ -160,7 +154,7 @@ public class RCONModule extends ModuleBase {
 		message.reply("Unbound server \"" + serverInfo.name + "\" successfully");
 	}
 	
-	public void boundRCONServersCommand(String command, String[] args, IUser sender, IChannel channel, IMessage message) {
+	public void listRCONServersCommand(Command cmd, String[] args, IUser sender, IChannel channel, IMessage message) {
 		if (infoMap.isEmpty()) {
 			message.reply("No servers are bound yet");
 		} else {
@@ -168,7 +162,7 @@ public class RCONModule extends ModuleBase {
 		}
 	}
 	
-	public void rconCommand(String command, String[] args, IUser sender, IChannel channel, IMessage message) {					
+	public void rconCommand(Command cmd, String[] args, IUser sender, IChannel channel, IMessage message) {					
 		if (infoMap.isEmpty()) {
 			message.reply("No RCON server configured yet");
 			return;
