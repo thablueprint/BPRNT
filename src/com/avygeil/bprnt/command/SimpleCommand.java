@@ -1,12 +1,10 @@
 package com.avygeil.bprnt.command;
 
-import java.util.Queue;
-
 import com.avygeil.bprnt.util.FormatUtils;
+import discord4j.core.object.entity.Member;
+import discord4j.core.object.entity.Message;
 
-import sx.blah.discord.handle.obj.IChannel;
-import sx.blah.discord.handle.obj.IMessage;
-import sx.blah.discord.handle.obj.IUser;
+import java.util.Queue;
 
 public class SimpleCommand extends CommandBase {
 	
@@ -53,14 +51,14 @@ public class SimpleCommand extends CommandBase {
 	}
 
 	@Override
-	protected Command invoke_Internal(Queue<String> argQueue, IUser sender, IChannel channel, IMessage message)
+	protected Command invoke_Internal(Queue<String> argQueue, Member sender, Message message)
 			throws InvalidUsageException {
 		
 		// first, parse the arguments according to the format
 		// TODO
 		
 		// invoke the command
-		callback.call(this, argQueue.toArray(new String[0]), sender, channel, message);
+		callback.call(this, argQueue.toArray(new String[0]), sender, message);
 		
 		// since this is an end point, we won't chain with anything else
 		return null;

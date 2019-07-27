@@ -1,12 +1,11 @@
 package com.avygeil.bprnt.util;
 
-import java.net.InetSocketAddress;
-import java.util.Stack;
-
+import com.avygeil.bprnt.command.ParentCommand;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StrTokenizer;
 
-import com.avygeil.bprnt.command.ParentCommand;
+import java.net.InetSocketAddress;
+import java.util.Stack;
 
 public final class FormatUtils {
 	

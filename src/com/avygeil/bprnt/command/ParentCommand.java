@@ -1,18 +1,15 @@
 package com.avygeil.bprnt.command;
 
+import com.avygeil.bprnt.util.FormatUtils;
+import discord4j.core.object.entity.Member;
+import discord4j.core.object.entity.Message;
+import org.apache.commons.collections4.map.CaseInsensitiveMap;
+import org.apache.commons.lang3.StringUtils;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-
-import org.apache.commons.collections4.map.CaseInsensitiveMap;
-import org.apache.commons.lang3.StringUtils;
-
-import com.avygeil.bprnt.util.FormatUtils;
-
-import sx.blah.discord.handle.obj.IChannel;
-import sx.blah.discord.handle.obj.IMessage;
-import sx.blah.discord.handle.obj.IUser;
 
 public class ParentCommand extends CommandBase {
 	
@@ -84,7 +81,7 @@ public class ParentCommand extends CommandBase {
 	}
 
 	@Override
-	protected Command invoke_Internal(Queue<String> argQueue, IUser sender, IChannel channel, IMessage message)
+	protected Command invoke_Internal(Queue<String> argQueue, Member sender, Message message)
 			throws InvalidUsageException {
 		
 		// for empty subcommands, just act like we reached the end of the chain, but shouldn't happen

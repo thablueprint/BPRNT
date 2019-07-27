@@ -1,10 +1,9 @@
 package com.avygeil.bprnt.module.rcon;
 
-import java.net.InetSocketAddress;
-
+import com.avygeil.bprnt.util.FormatUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import com.avygeil.bprnt.util.FormatUtils;
+import java.net.InetSocketAddress;
 
 public class RCONServerInfo {
 	

@@ -1,11 +1,12 @@
 package com.avygeil.bprnt.module;
 
-import java.io.File;
-
-import org.slf4j.Logger;
-
 import com.avygeil.bprnt.bot.Bot;
 import com.avygeil.bprnt.config.ModuleConfig;
+import discord4j.core.object.entity.Member;
+import discord4j.core.object.entity.Message;
+import org.slf4j.Logger;
+
+import java.io.File;
 
 public abstract class ModuleBase implements Module {
 	
@@ -20,6 +21,12 @@ public abstract class ModuleBase implements Module {
 		this.config = config;
 		this.dataFolder = dataFolder;
 		this.LOGGER = logger;
+	}
+
+	// no-op handles by default
+
+	@Override
+	public void handleMessage(Member sender, Message message) {
 	}
 
 }

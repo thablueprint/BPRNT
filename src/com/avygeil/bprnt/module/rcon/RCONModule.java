@@ -1,31 +1,26 @@
 package com.avygeil.bprnt.module.rcon;
 
-import java.io.File;
-import java.net.InetSocketAddress;
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
-
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-
 import com.avygeil.bprnt.bot.Bot;
 import com.avygeil.bprnt.command.Command;
 import com.avygeil.bprnt.command.CommandFactory;
-import com.avygeil.bprnt.command.CommandPriority;
 import com.avygeil.bprnt.command.CommandStore;
 import com.avygeil.bprnt.config.ModuleConfig;
-import com.avygeil.bprnt.module.Module;
 import com.avygeil.bprnt.module.ModuleBase;
+import com.avygeil.bprnt.module.ModulePriority;
+import com.avygeil.bprnt.util.DiscordUtils;
 import com.avygeil.bprnt.util.FormatUtils;
 import com.ibasco.agql.protocols.valve.source.query.SourceRconAuthStatus;
 import com.ibasco.agql.protocols.valve.source.query.client.SourceRconClient;
 import com.ibasco.agql.protocols.valve.source.query.exceptions.RconNotYetAuthException;
+import discord4j.core.object.entity.Member;
+import discord4j.core.object.entity.Message;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
 
-import sx.blah.discord.handle.obj.IChannel;
-import sx.blah.discord.handle.obj.IMessage;
-import sx.blah.discord.handle.obj.IReaction;
-import sx.blah.discord.handle.obj.IUser;
+import java.io.File;
+import java.net.InetSocketAddress;
+import java.util.HashMap;
+import java.util.Map;
 
 public class RCONModule extends ModuleBase {
 	
@@ -38,7 +33,7 @@ public class RCONModule extends ModuleBase {
 
 	@Override
 	public int getPriority() {
-		return CommandPriority.NORMAL;
+		return ModulePriority.NORMAL;
 	}
 
 	@Override
@@ -98,9 +93,9 @@ public class RCONModule extends ModuleBase {
 		);
 	}
 	
-	public void bindRCONServerCommand(Command cmd, String[] args, IUser sender, IChannel channel, IMessage message) {
+	public void bindRCONServerCommand(Command cmd, String[] args, Member sender, Message message) {
 		if (args.length < 2) {
-			message.reply("Usage: `!bindRCONServer <name> <ip[:port]> [rconpassword]`");
+			DiscordUtils.replyToMessage(message, "Usage: `!bindRCONServer <name> <ip[:port]> [rconpassword]`");
 			return;
 		}
 		
@@ -112,7 +107,7 @@ public class RCONModule extends ModuleBase {
 		try {
 			address = FormatUtils.stringToNetAddress(args[1], RCONServerInfo.DEFAULT_PORT);
 		} catch (IllegalArgumentException e) {
-			message.reply("Invalid server address (format: `<ip[:port]>`)");
+			DiscordUtils.replyToMessage(message, "Invalid server address (format: `<ip[:port]>`)");
 			return;
 		}
 		
@@ -125,58 +120,58 @@ public class RCONModule extends ModuleBase {
 		infoMap.put(serverInfo.name.toLowerCase(), serverInfo); // case insensitive
 		config.properties.put(serverInfo.name, serverInfo.toPropertyString());
 		botInstance.getManager().saveConfig();
-		
-		message.reply("Bound RCON server \"" + serverInfo.name + "\" successfully");
+
+		DiscordUtils.replyToMessage(message, "Bound RCON server \"" + serverInfo.name + "\" successfully");
 	}
 	
-	public void unbindRCONServerCommand(Command cmd, String[] args, IUser sender, IChannel channel, IMessage message) {
+	public void unbindRCONServerCommand(Command cmd, String[] args, Member sender, Message message) {
 		if (infoMap.isEmpty()) {
-			message.reply("No servers are bound yet");
+			DiscordUtils.replyToMessage(message, "No servers are bound yet");
 			return;
 		}
 		
 		if (args.length < 1) {
-			message.reply("Usage: !rcon <server>");
+			DiscordUtils.replyToMessage(message, "Usage: !rcon <server>");
 			return;
 		}
 		
 		final RCONServerInfo serverInfo = infoMap.get(args[0].toLowerCase());
 		
 		if (serverInfo == null) {
-			message.reply("No entry exists for server \"" + args[0] + "\"");
+			DiscordUtils.replyToMessage(message, "No entry exists for server \"" + args[0] + "\"");
 			return;
 		}
 		
 		infoMap.remove(serverInfo.name.toLowerCase());
 		config.properties.remove(serverInfo.name);
 		botInstance.getManager().saveConfig();
-		
-		message.reply("Unbound server \"" + serverInfo.name + "\" successfully");
+
+		DiscordUtils.replyToMessage(message, "Unbound server \"" + serverInfo.name + "\" successfully");
 	}
 	
-	public void listRCONServersCommand(Command cmd, String[] args, IUser sender, IChannel channel, IMessage message) {
+	public void listRCONServersCommand(Command cmd, String[] args, Member sender, Message message) {
 		if (infoMap.isEmpty()) {
-			message.reply("No servers are bound yet");
+			DiscordUtils.replyToMessage(message, "No servers are bound yet");
 		} else {
-			message.reply("Bound servers: " + StringUtils.join(infoMap.keySet(), ", "));
+			DiscordUtils.replyToMessage(message, "Bound servers: " + StringUtils.join(infoMap.keySet(), ", "));
 		}
 	}
 	
-	public void rconCommand(Command cmd, String[] args, IUser sender, IChannel channel, IMessage message) {					
+	public void rconCommand(Command cmd, String[] args, Member sender, Message message) {
 		if (infoMap.isEmpty()) {
-			message.reply("No RCON server configured yet");
+			DiscordUtils.replyToMessage(message, "No RCON server configured yet");
 			return;
 		}
 		
 		if (args.length < 2) {
-			message.reply("Usage: !rcon <server> <command>");
+			DiscordUtils.replyToMessage(message, "Usage: !rcon <server> <command>");
 			return;
 		}
 		
 		final RCONServerInfo serverInfo = infoMap.get(args[0].toLowerCase());
 		
 		if (serverInfo == null) {
-			message.reply("No entry exists for server \"" + args[0] + "\"");
+			DiscordUtils.replyToMessage(message, "No entry exists for server \"" + args[0] + "\"");
 			return;
 		}
 		
@@ -188,8 +183,8 @@ public class RCONModule extends ModuleBase {
 			if (reason.isEmpty()) {
 				reason = "RCON password might be invalid"; // default reason
 			}
-			
-			message.reply("Failed to authenticate! " + reason);
+
+			DiscordUtils.replyToMessage(message, "Failed to authenticate! " + reason);
 			return;
 		}
 
@@ -197,43 +192,13 @@ public class RCONModule extends ModuleBase {
 		
 		try {
 			String result = rconClient.execute(serverInfo.address, rconCommand).join();
-			message.reply(result);
+			DiscordUtils.replyToMessage(message, result);
 		} catch (RconNotYetAuthException e) {
 			// this shouldn't happen unless our auth immediately times out somehow...
 			e.printStackTrace();
-			message.reply("Not yet authenticated to RCON server");
+			DiscordUtils.replyToMessage(message, "Not yet authenticated to RCON server");
 			return;
 		}
-	}
-
-	@Override
-	public void handleModuleLoad(Module module) {
-		// TODO Auto-generated method stub
-	}
-
-	@Override
-	public void handleModuleUnload(Module module) {
-		// TODO Auto-generated method stub
-	}
-
-	@Override
-	public void handleMessage(IUser sender, IChannel channel, IMessage message) {
-		// TODO Auto-generated method stub
-	}
-
-	@Override
-	public void handleReactionAdd(IUser sender, IChannel channel, IMessage message, IReaction reaction) {
-		// TODO Auto-generated method stub
-	}
-
-	@Override
-	public void handleUserJoin(IUser user, LocalDateTime joinTime) {
-		// TODO Auto-generated method stub
-	}
-
-	@Override
-	public void handleUserLeave(IUser user) {
-		// TODO Auto-generated method stub
 	}
 
 }

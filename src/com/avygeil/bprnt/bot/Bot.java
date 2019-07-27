@@ -1,21 +1,5 @@
 package com.avygeil.bprnt.bot;
 
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.List;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.avygeil.bprnt.command.CommandStore;
 import com.avygeil.bprnt.config.GuildConfig;
 import com.avygeil.bprnt.config.ModuleConfig;
@@ -25,12 +9,24 @@ import com.avygeil.bprnt.module.ModuleBase;
 import com.avygeil.bprnt.permission.PermissionsHandler;
 import com.avygeil.bprnt.permission.SimplePermissionsHandler;
 import com.avygeil.bprnt.util.SubclassPool;
+import discord4j.core.object.entity.Guild;
+import discord4j.core.object.entity.Member;
+import discord4j.core.object.entity.Message;
+import discord4j.core.object.util.Snowflake;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import sx.blah.discord.handle.obj.IChannel;
-import sx.blah.discord.handle.obj.IGuild;
-import sx.blah.discord.handle.obj.IMessage;
-import sx.blah.discord.handle.obj.IReaction;
-import sx.blah.discord.handle.obj.IUser;
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.List;
 
 public class Bot {
 	
@@ -41,20 +37,22 @@ public class Bot {
 	}
 	
 	private final BotManager manager;
-	private final IGuild thisGuild;
+	private final Snowflake thisGuildId;
 	
 	private final GuildConfig config;
 	private PermissionsHandler permissionsHandler = null;
 	private CommandStore commandStore = null;
 	private List<Module> moduleInstances = new ArrayList<>();
 	
-	public Bot(BotManager manager, IGuild thisGuild, GuildConfig config) {
+	public Bot(BotManager manager, Guild thisGuild, GuildConfig config) {
 		this.manager = manager;
-		this.thisGuild = thisGuild;
+		this.thisGuildId = thisGuild.getId();
 		this.config = config;
 	}
 	
 	public void initialize() {
+		final Guild thisGuild = getGuild();
+
 		// first, create the permissions handler for this module
 		
 		final PermissionsConfig permissionsConfig = config.permissions;
@@ -90,7 +88,7 @@ public class Bot {
 			File moduleDataFolder = null;
 			
 			try {
-				final Path moduleDataPath = Paths.get("data", clazz.getName(), Long.toString(thisGuild.getLongID()));
+				final Path moduleDataPath = Paths.get("data", clazz.getName(), Long.toString(thisGuildId.asLong()));
 				moduleDataFolder = Files.createDirectories(moduleDataPath).toFile();
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -140,14 +138,6 @@ public class Bot {
 			}
 		}
 		
-		// now that we have the full module list, broadcast the load event
-		moduleInstances.forEach(cm -> {
-			moduleInstances.forEach(om -> {
-				if (om == cm) return;
-				om.handleModuleLoad(cm);
-			});
-		});
-		
 		// convenience method to give modules a chance to register their commands early on
 		moduleInstances.forEach(module -> module.registerCommands(commandStore));
 		
@@ -159,8 +149,8 @@ public class Bot {
 		return manager;
 	}
 	
-	public IGuild getGuild() {
-		return thisGuild;
+	public Guild getGuild() {
+		return manager.getClient().getGuildById(thisGuildId).block();
 	}
 	
 	public CommandStore getCommandStore() {
@@ -171,24 +161,12 @@ public class Bot {
 		return config.admins;
 	}
 	
-	public void onMessageReceived(IUser sender, IChannel channel, IMessage message) {
+	public void onMessageReceived(Member sender, Message message) {
 		// first, handle commands
-		commandStore.handleMessage(sender, channel, message);
+		commandStore.handleMessage(sender, message);
 		
 		// even if the command was handled, we still fire a message event (so modules like loggers still work)
-		moduleInstances.forEach(m -> m.handleMessage(sender, channel, message));
-	}
-	
-	public void onReactionAdd(IUser sender, IChannel channel, IMessage message, IReaction reaction) {
-		moduleInstances.forEach(m -> m.handleReactionAdd(sender, channel, message, reaction));
-	}
-	
-	public void onUserJoin(IUser user, LocalDateTime joinTime) {
-		moduleInstances.forEach(m -> m.handleUserJoin(user, joinTime));
-	}
-	
-	public void onUserLeave(IUser user) {
-		moduleInstances.forEach(m -> m.handleUserLeave(user));
+		moduleInstances.forEach(m -> m.handleMessage(sender, message));
 	}
 
 }

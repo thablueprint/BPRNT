@@ -1,14 +1,13 @@
 package com.avygeil.bprnt.command;
 
+import com.avygeil.bprnt.permission.NoPermissionException;
+import com.avygeil.bprnt.permission.PermissionsHandler;
+import discord4j.core.object.entity.Member;
+import discord4j.core.object.entity.Message;
+
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Queue;
-
-import com.avygeil.bprnt.permission.NoPermissionException;
-import com.avygeil.bprnt.permission.PermissionsHandler;
-import sx.blah.discord.handle.obj.IChannel;
-import sx.blah.discord.handle.obj.IMessage;
-import sx.blah.discord.handle.obj.IUser;
 
 public abstract class CommandBase implements Command {
 	
@@ -30,7 +29,7 @@ public abstract class CommandBase implements Command {
 	}
 	
 	@Override
-	public void invoke(PermissionsHandler perms, String[] args, IUser sender, IChannel channel, IMessage message)
+	public void invoke(PermissionsHandler perms, String[] args, Member sender, Message message)
 			throws NoPermissionException, InvalidUsageException {
 		
 		// we need a modifiable list of args to chain them
@@ -45,7 +44,7 @@ public abstract class CommandBase implements Command {
 		
 		// actual subclass implementation
 		try {
-			nextCommand = invoke_Internal(argQueue, sender, channel, message);
+			nextCommand = invoke_Internal(argQueue, sender, message);
 		} catch (InvalidUsageException e) {
 			// rethrow the exception with the correct usage only if it is empty
 			// this allows subclasses to override it if needed
@@ -58,11 +57,11 @@ public abstract class CommandBase implements Command {
 		
 		// chain the next command, assuming the previous invokation changed the arg queue
 		if (nextCommand != null) {
-			nextCommand.invoke(perms, argQueue.toArray(new String[0]), sender, channel, message);
+			nextCommand.invoke(perms, argQueue.toArray(new String[0]), sender, message);
 		}
 	}
 	
-	protected abstract Command invoke_Internal(Queue<String> argQueue, IUser sender, IChannel channel, IMessage message)
+	protected abstract Command invoke_Internal(Queue<String> argQueue, Member sender, Message message)
 			throws InvalidUsageException;
 
 }

@@ -1,9 +1,7 @@
 package com.avygeil.bprnt;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-
+import com.avygeil.bprnt.bot.BotManager;
+import com.avygeil.bprnt.util.BaseEmoji;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -15,10 +13,9 @@ import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.avygeil.bprnt.bot.BotManager;
-import com.avygeil.bprnt.util.BaseEmoji;
-
-import sx.blah.discord.util.DiscordException;
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 public class Main {
 	
@@ -42,10 +39,14 @@ public class Main {
 		} catch (ParseException e) {
 			e.printStackTrace();
 		}
+
+		boolean noStart = false;
 		
 		final String decodeFilePath = cmd.getOptionValue("emojidecode", "");
 		
 		if (!decodeFilePath.isEmpty()) {
+			noStart = true;
+
 			try {
 				final File fileToDecode = new File(decodeFilePath);
 				final File decodedFile = new File(FilenameUtils.removeExtension(decodeFilePath) + "_decoded.txt");
@@ -60,6 +61,8 @@ public class Main {
 		final String encodeFilePath = cmd.getOptionValue("emojiencode", "");
 		
 		if (!encodeFilePath.isEmpty()) {
+			noStart = true;
+
 			try {
 				final File fileToEncode = new File(encodeFilePath);
 				final File encodedFile = new File(FilenameUtils.removeExtension(encodeFilePath) + "_encoded.emoji");
@@ -70,9 +73,7 @@ public class Main {
 				e.printStackTrace();
 			}
 		}
-		
-		final boolean noStart = cmd.hasOption("nostart");
-		
+
 		if (noStart) {
 			LOGGER.info("The bot was not started due to command line arguments");
 			return;
@@ -84,22 +85,15 @@ public class Main {
 
 		try {
 			botManager.initialize();
-		} catch (DiscordException | IOException e) {
+		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(1);
 		}
 
-		botManager.start();		
+		botManager.start().doOnError(e -> e.printStackTrace()).block();
 	}
 	
 	public static Options buildArgumentOptions() {
-		final Option noStartOption = Option.builder("n")
-				.longOpt("nostart")
-				.desc("Doesn't start the bot (useful to just run arguments)")
-				.hasArg(false)
-				.required(false)
-				.build();
-		
 		final Option decodeEmoji = Option.builder("d")
 				.longOpt("emojidecode")
 				.desc("Decodes the specified file from emoji")
@@ -115,7 +109,6 @@ public class Main {
 				.build();
 		
 		final Options result = new Options();
-		result.addOption(noStartOption);
 		result.addOption(decodeEmoji);
 		result.addOption(encodeEmoji);
 		

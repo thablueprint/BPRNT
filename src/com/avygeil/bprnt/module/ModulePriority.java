@@ -1,8 +1,8 @@
-package com.avygeil.bprnt.command;
+package com.avygeil.bprnt.module;
 
-public final class CommandPriority {
+public final class ModulePriority {
 	
-	private CommandPriority() {
+	private ModulePriority() {
 	}
 	
 	// fake enum fields for easy int conversion

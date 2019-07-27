@@ -1,9 +1,9 @@
 package com.avygeil.bprnt.permission;
 
-import sx.blah.discord.handle.obj.IUser;
+import discord4j.core.object.entity.Member;
 
 public interface PermissionsHandler {
 	
-	public boolean hasPermission(IUser user, String permissionString);
+	public boolean hasPermission(Member user, String permissionString);
 	
 }

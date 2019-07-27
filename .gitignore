@@ -28,6 +28,9 @@ hs_err_pid*
 # Maven
 /target/
 
+# IDEA
+.idea/
+
 # Project specific files
 /data/
 *.emoji

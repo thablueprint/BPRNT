@@ -1,15 +1,14 @@
 package com.avygeil.bprnt.permission;
 
+import com.avygeil.bprnt.bot.Bot;
+import com.avygeil.bprnt.config.PermissionsConfig;
+import discord4j.core.object.entity.Member;
+import discord4j.core.object.util.Permission;
+import discord4j.core.object.util.Snowflake;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import com.avygeil.bprnt.bot.Bot;
-import com.avygeil.bprnt.config.PermissionsConfig;
-
-import sx.blah.discord.handle.obj.IRole;
-import sx.blah.discord.handle.obj.IUser;
-import sx.blah.discord.handle.obj.Permissions;
 
 public class SimplePermissionsHandler implements PermissionsHandler {
 	
@@ -34,18 +33,20 @@ public class SimplePermissionsHandler implements PermissionsHandler {
 	}
 
 	@Override
-	public boolean hasPermission(IUser user, String permissionString) {
+	public boolean hasPermission(Member user, String permissionString) {
 		// everyone has the empty permission
 		if (permissionString.isEmpty()) {
 			return true;
 		}
+
+		boolean isAdmin = user.getBasePermissions().map(s -> s.contains(Permission.ADMINISTRATOR)).block();
 		
 		// guild admins bypass all permission checks by default
-		if (user.getPermissionsForGuild(bot.getGuild()).contains(Permissions.ADMINISTRATOR)) {
+		if (isAdmin) {
 			return true;
 		}
 		
-		final long userId = user.getLongID();
+		final long userId = user.getId().asLong();
 		
 		// global bot and local bot admins also bypass all permission checks
 		if (globalAdmins.contains(userId) || localAdmins.contains(userId)) {
@@ -60,8 +61,8 @@ public class SimplePermissionsHandler implements PermissionsHandler {
 		}
 		
 		// check all user groups for their permissions
-		for (IRole role : user.getRolesForGuild(bot.getGuild())) {
-			final List<String> groupPermissions = config.groupPermissions.getOrDefault(role.getLongID(), Collections.emptyList());
+		for (Snowflake roleId : user.getRoleIds()) {
+			final List<String> groupPermissions = config.groupPermissions.getOrDefault(roleId.asLong(), Collections.emptyList());
 			
 			if (groupPermissions.contains(permissionString)) {
 				return true;

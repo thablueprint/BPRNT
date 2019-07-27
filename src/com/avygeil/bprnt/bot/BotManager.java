@@ -1,5 +1,20 @@
 package com.avygeil.bprnt.bot;
 
+import com.avygeil.bprnt.config.BotConfig;
+import com.avygeil.bprnt.config.ConfigStream;
+import com.avygeil.bprnt.config.GuildConfig;
+import com.avygeil.bprnt.module.ModuleBase;
+import com.avygeil.bprnt.util.SubclassPool;
+import discord4j.core.DiscordClient;
+import discord4j.core.DiscordClientBuilder;
+import discord4j.core.event.domain.guild.GuildCreateEvent;
+import discord4j.core.event.domain.guild.GuildDeleteEvent;
+import discord4j.core.event.domain.message.MessageCreateEvent;
+import org.reflections.Reflections;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import reactor.core.publisher.Mono;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
@@ -9,27 +24,6 @@ import java.util.Optional;
 import java.util.Scanner;
 import java.util.Set;
 
-import org.reflections.Reflections;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.avygeil.bprnt.config.BotConfig;
-import com.avygeil.bprnt.config.ConfigStream;
-import com.avygeil.bprnt.config.GuildConfig;
-import com.avygeil.bprnt.module.ModuleBase;
-import com.avygeil.bprnt.util.SubclassPool;
-
-import sx.blah.discord.api.ClientBuilder;
-import sx.blah.discord.api.IDiscordClient;
-import sx.blah.discord.api.events.EventSubscriber;
-import sx.blah.discord.handle.impl.events.guild.GuildCreateEvent;
-import sx.blah.discord.handle.impl.events.guild.GuildLeaveEvent;
-import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
-import sx.blah.discord.handle.impl.events.guild.channel.message.reaction.ReactionAddEvent;
-import sx.blah.discord.handle.impl.events.guild.member.UserJoinEvent;
-import sx.blah.discord.handle.impl.events.guild.member.UserLeaveEvent;
-import sx.blah.discord.util.DiscordException;
-
 public class BotManager {
 	
 	public static final Logger LOGGER;
@@ -38,7 +32,7 @@ public class BotManager {
 		LOGGER = LoggerFactory.getLogger(BotManager.class);
 	}
 	
-	private IDiscordClient client = null;
+	private DiscordClient client = null;
 	
 	private ConfigStream configStream = null;
 	private SubclassPool<ModuleBase> moduleClassPool = null;
@@ -46,7 +40,7 @@ public class BotManager {
 	// une instance de bot par id de guilde
 	private final Map<Long, Bot> botInstances = new HashMap<>();
 		
-	public void initialize() throws IOException, DiscordException {
+	public void initialize() throws IOException {
 		// read the config first
 		configStream = new ConfigStream(new File("config.emoji"));
 		configStream.read();
@@ -81,19 +75,26 @@ public class BotManager {
 		
 		LOGGER.info("Registered " + moduleClassPool.getNumClasses() + " modules");
 		
-		// now login using the token
-		ClientBuilder builder = new ClientBuilder();
-		builder.withToken(config.token);
-		client = builder.login();
+		// now build the client using the token
+		client = new DiscordClientBuilder(config.token).build();
+
+		// setup event management
+        client.getEventDispatcher().on(GuildCreateEvent.class).subscribe(this::executeGuildCreateEvent);
+        client.getEventDispatcher().on(GuildDeleteEvent.class).subscribe(this::executeGuildDeleteEvent);
+		client.getEventDispatcher().on(MessageCreateEvent.class).subscribe(this::executeMessageCreateEvent);
 	}
 	
-	public void start() {
+	public Mono<Void> start() {
 		if (client == null) {
 			throw new UnsupportedOperationException();
 		}
 		
-		client.getDispatcher().registerListener(this);
+		return client.login();
 	}
+
+	public DiscordClient getClient() {
+	    return client;
+    }
 	
 	public List<Long> getGlobalAdmins() {
 		return configStream.getConfig().globalAdmins;
@@ -110,57 +111,43 @@ public class BotManager {
 	public SubclassPool<ModuleBase> getModulePool() {
 		return moduleClassPool;
 	}
-	
-	@EventSubscriber
-	public void onGuildCreateEvent(GuildCreateEvent event) {
-		final long guildId = event.getGuild().getLongID();
-		
-		if (botInstances.containsKey(guildId)) {
-			return; // this can happen from a rejoin etc, just leave it as it is
-		}
-		
-		// we just connected to a guild, whether at startup or because someone just added us
-		
-		// if we don't have a config for this guild yet, this is the first connection, so create it		
-		if (configStream.getConfig().guilds.putIfAbsent(guildId, new GuildConfig()) == null) {
-			LOGGER.info("Created new guild config for new guild: " + event.getGuild().getName());
-			saveConfig();
-		}
-		
-		// create the new instance
-		final GuildConfig instanceConfig = configStream.getConfig().guilds.get(guildId); // should never be null
-		final Bot newBotInstance = new Bot(this, event.getGuild(), instanceConfig);
-		newBotInstance.initialize();
-		botInstances.put(guildId, newBotInstance);
-	}
-	
-	@EventSubscriber
-	public void onGuildLeaveEvent(GuildLeaveEvent event) {
-		botInstances.remove(event.getGuild().getLongID());
-	}
-	
-	@EventSubscriber
-	public void onMessageReceivedEvent(MessageReceivedEvent event) {
-		Optional<Bot> botInstance = Optional.ofNullable(botInstances.get(event.getGuild().getLongID()));
-		botInstance.ifPresent(b -> b.onMessageReceived(event.getAuthor(), event.getChannel(), event.getMessage()));
-	}
-	
-	@EventSubscriber
-	public void onReactionAddEvent(ReactionAddEvent event) {
-		Optional<Bot> botInstance = Optional.ofNullable(botInstances.get(event.getGuild().getLongID()));
-		botInstance.ifPresent(b -> b.onReactionAdd(event.getAuthor(), event.getChannel(), event.getMessage(), event.getReaction()));
-	}
-	
-	@EventSubscriber
-	public void onUserJoinEvent(UserJoinEvent event) {
-		Optional<Bot> botInstance = Optional.ofNullable(botInstances.get(event.getGuild().getLongID()));
-		botInstance.ifPresent(b -> b.onUserJoin(event.getUser(), event.getJoinTime()));
-	}
-	
-	@EventSubscriber
-	public void onUserLeaveEvent(UserLeaveEvent event) {
-		Optional<Bot> botInstance = Optional.ofNullable(botInstances.get(event.getGuild().getLongID()));
-		botInstance.ifPresent(b -> b.onUserLeave(event.getUser()));
-	}
+
+    public void executeGuildCreateEvent(GuildCreateEvent event) {
+        final long guildId = event.getGuild().getId().asLong();
+
+        if (botInstances.containsKey(guildId)) {
+            return; // this can happen from a rejoin etc, just leave it as it is
+        }
+
+        // we just connected to a guild, whether at startup or because someone just added us
+
+        // if we don't have a config for this guild yet, this is the first connection, so create it
+        if (configStream.getConfig().guilds.putIfAbsent(guildId, new GuildConfig()) == null) {
+            LOGGER.info("Created new guild config for new guild: " + event.getGuild().getName());
+            saveConfig();
+        }
+
+        // create the new instance
+        final GuildConfig instanceConfig = configStream.getConfig().guilds.get(guildId); // should never be null
+        final Bot newBotInstance = new Bot(this, event.getGuild(), instanceConfig);
+        newBotInstance.initialize();
+        botInstances.put(guildId, newBotInstance);
+    }
+
+    public void executeGuildDeleteEvent(GuildDeleteEvent event) {
+	    // only remove the bot instance if this is not an outage
+	    if (!event.isUnavailable()) {
+            botInstances.remove(event.getGuildId().asLong());
+        }
+    }
+
+	public void executeMessageCreateEvent(MessageCreateEvent event) {
+	    event.getGuildId().ifPresent(guildId -> {
+	        event.getMember().ifPresent(member -> {
+                Optional<Bot> botInstance = Optional.ofNullable(botInstances.get(guildId.asLong()));
+                botInstance.ifPresent(bot -> bot.onMessageReceived(member, event.getMessage()));
+            });
+        });
+    }
 
 }

@@ -1,11 +1,10 @@
 package com.avygeil.bprnt.command;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import com.avygeil.bprnt.command.arg.ArgumentDescriptor;
 import org.apache.commons.lang3.StringUtils;
 
-import com.avygeil.bprnt.command.arg.ArgumentDescriptor;
+import java.util.ArrayList;
+import java.util.List;
 
 public class CommandFormat {
 	

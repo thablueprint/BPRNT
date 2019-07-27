@@ -1,9 +1,9 @@
 package com.avygeil.bprnt.util;
 
-import java.util.Base64;
-
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
+
+import java.util.Base64;
 
 public final class BaseEmoji {
 	

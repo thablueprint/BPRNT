@@ -1,31 +1,26 @@
 package com.avygeil.bprnt.module.alias;
 
+import com.avygeil.bprnt.bot.Bot;
+import com.avygeil.bprnt.command.Command;
+import com.avygeil.bprnt.command.CommandFactory;
+import com.avygeil.bprnt.command.CommandFormat;
+import com.avygeil.bprnt.command.CommandStore;
+import com.avygeil.bprnt.command.SimpleCommand;
+import com.avygeil.bprnt.config.ModuleConfig;
+import com.avygeil.bprnt.module.ModuleBase;
+import com.avygeil.bprnt.module.ModulePriority;
+import com.avygeil.bprnt.util.DiscordUtils;
+import discord4j.core.object.entity.Member;
+import discord4j.core.object.entity.Message;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+
 import java.io.File;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-
-import com.avygeil.bprnt.bot.Bot;
-import com.avygeil.bprnt.command.Command;
-import com.avygeil.bprnt.command.CommandFactory;
-import com.avygeil.bprnt.command.CommandFormat;
-import com.avygeil.bprnt.command.CommandPriority;
-import com.avygeil.bprnt.command.CommandStore;
-import com.avygeil.bprnt.command.SimpleCommand;
-import com.avygeil.bprnt.config.ModuleConfig;
-import com.avygeil.bprnt.module.Module;
-import com.avygeil.bprnt.module.ModuleBase;
-
-import sx.blah.discord.handle.obj.IChannel;
-import sx.blah.discord.handle.obj.IMessage;
-import sx.blah.discord.handle.obj.IReaction;
-import sx.blah.discord.handle.obj.IUser;
 
 public class AliasModule extends ModuleBase {
 	
@@ -44,7 +39,7 @@ public class AliasModule extends ModuleBase {
 
 	@Override
 	public int getPriority() {
-		return CommandPriority.MONITORING;
+		return ModulePriority.MONITORING;
 	}
 
 	@Override
@@ -93,9 +88,9 @@ public class AliasModule extends ModuleBase {
 		);
 	}
 	
-	public void setAliasCommand(Command cmd, String[] args, IUser sender, IChannel channel, IMessage message) {
+	public void setAliasCommand(Command cmd, String[] args, Member sender, Message message) {
 		if (args.length < 2) {
-			message.reply("Usage: `!setAlias <alias> <aliasedCmd ...>`");
+			DiscordUtils.replyToMessage(message,"Usage: `!setAlias <alias> <aliasedCmd ...>`");
 			return;
 		}
 		
@@ -103,29 +98,29 @@ public class AliasModule extends ModuleBase {
 		final String aliasedCmd = StringUtils.join(args, ' ', 1, args.length);
 				
 		if (!registerAlias(alias, aliasedCmd, true)) {
-			message.reply("This command already exists as a non-alias command!");
+			DiscordUtils.replyToMessage(message, "This command already exists as a non-alias command!");
 			return;
 		}
-		
-		message.reply("Alias \"" + alias + "\" set successfully");
+
+		DiscordUtils.replyToMessage(message, "Alias \"" + alias + "\" set successfully");
 	}
 	
-	public void removeAliasCommand(Command cmd, String[] args, IUser sender, IChannel channel, IMessage message) {
+	public void removeAliasCommand(Command cmd, String[] args, Member sender, Message message) {
 		if (args.length < 1) {
-			message.reply("Usage: `!removeAlias <alias>`");
+			DiscordUtils.replyToMessage(message, "Usage: `!removeAlias <alias>`");
 			return;
 		}
 		
 		if (unregisterAlias(args[0])) {
-			message.reply("Removed alias \"" + args[0] + "\" successfully");
+			DiscordUtils.replyToMessage(message, "Removed alias \"" + args[0] + "\" successfully");
 		} else {
-			message.reply("There is no alias with this name!");
+			DiscordUtils.replyToMessage(message, "There is no alias with this name!");
 		}
 	}
 	
-	public void listAliasesCommand(Command cmd, String[] args, IUser sender, IChannel channel, IMessage message) {
+	public void listAliasesCommand(Command cmd, String[] args, Member sender, Message message) {
 		if (config.properties.isEmpty()) {
-			message.reply("No alias set yet");
+			DiscordUtils.replyToMessage(message, "No alias set yet");
 			return;
 		}
 		
@@ -162,11 +157,11 @@ public class AliasModule extends ModuleBase {
 				sb.append(invalidAlias);
 			}
 		}
-		
-		message.reply(sb.toString());
+
+		DiscordUtils.replyToMessage(message, sb.toString());
 	}
 	
-	public void aliasCommand(Command cmd, String[] args, IUser sender, IChannel channel, IMessage message) {
+	public void aliasCommand(Command cmd, String[] args, Member sender, Message message) {
 		if (!activeAliases.contains(cmd.getCommandName().toLowerCase())) {
 			return;
 		}
@@ -180,7 +175,7 @@ public class AliasModule extends ModuleBase {
 		// TODO: capture arguments/substitution
 		
 		// dispatch the aliased cmd
-		commandStore.dispatchCommand(sender, channel, message, aliasedCmd);
+		commandStore.dispatchCommand(sender, message, aliasedCmd);
 	}
 	
 	private boolean registerAlias(String alias, String aliasedCmd, boolean updateConfig) {
@@ -225,35 +220,5 @@ public class AliasModule extends ModuleBase {
 		
 		return false;
 	}
-
-	@Override
-	public void handleModuleLoad(Module module) {
-		// TODO Auto-generated method stub
-	}
-
-	@Override
-	public void handleModuleUnload(Module module) {
-		// TODO Auto-generated method stub
-	}
-
-	@Override
-	public void handleMessage(IUser sender, IChannel channel, IMessage message) {
-		// TODO Auto-generated method stub
-	}
-
-	@Override
-	public void handleReactionAdd(IUser sender, IChannel channel, IMessage message, IReaction reaction) {
-		// TODO Auto-generated method stub
-	}
-
-	@Override
-	public void handleUserJoin(IUser user, LocalDateTime joinTime) {
-		// TODO Auto-generated method stub
-	}
-
-	@Override
-	public void handleUserLeave(IUser user) {
-		// TODO Auto-generated method stub
-	}	
 
 }

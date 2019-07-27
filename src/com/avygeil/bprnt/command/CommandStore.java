@@ -1,17 +1,15 @@
 package com.avygeil.bprnt.command;
 
-import java.util.Map;
-
+import com.avygeil.bprnt.permission.NoPermissionException;
+import com.avygeil.bprnt.permission.PermissionsHandler;
+import com.avygeil.bprnt.util.DiscordUtils;
+import com.avygeil.bprnt.util.FormatUtils;
+import discord4j.core.object.entity.Member;
+import discord4j.core.object.entity.Message;
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.apache.commons.lang3.StringUtils;
 
-import com.avygeil.bprnt.permission.NoPermissionException;
-import com.avygeil.bprnt.permission.PermissionsHandler;
-import com.avygeil.bprnt.util.FormatUtils;
-
-import sx.blah.discord.handle.obj.IChannel;
-import sx.blah.discord.handle.obj.IMessage;
-import sx.blah.discord.handle.obj.IUser;
+import java.util.Map;
 
 public class CommandStore {
 	
@@ -56,14 +54,16 @@ public class CommandStore {
 		commands.remove(commandName);
 	}
 	
-	public void handleMessage(IUser sender, IChannel channel, IMessage message) {
-		final String content = message.getContent().trim();
-		
-		if (!content.startsWith(commandPrefix)) {
-			return; // not a valid command
-		}
-		
-		dispatchCommand(sender, channel, message, content.substring(commandPrefix.length()));
+	public void handleMessage(Member sender, Message message) {
+		message.getContent().ifPresent(content -> {
+			final String cleanContent = content.trim();
+
+			if (!cleanContent.startsWith(commandPrefix)) {
+				return; // not a valid command
+			}
+
+			dispatchCommand(sender, message, cleanContent.substring(commandPrefix.length()));
+		});
 	}
 	
 	/*
@@ -72,7 +72,7 @@ public class CommandStore {
 	 * that "triggered" the command (this could be an aliased command, for instance),
 	 * so use with caution
 	 */
-	public void dispatchCommand(IUser sender, IChannel channel, IMessage message, String content) {		
+	public void dispatchCommand(Member sender, Message message, String content) {
 		// for now, just split in two parts for efficiency: <command> <arguments>
 		final String[] commandParts = StringUtils.split(content, null, 2);
 		
@@ -97,12 +97,12 @@ public class CommandStore {
 		final String[] args = FormatUtils.tokenize(commandParts.length > 1 ? commandParts[1].trim() : "");
 		
 		try {
-			command.invoke(permissionsHandler, args, sender, channel, message);
+			command.invoke(permissionsHandler, args, sender, message);
 		} catch (NoPermissionException e) {
 			if (!e.getPermissionString().isEmpty()) {
-				message.reply("You don't have permission to use this command (" + e.getPermissionString() + ")");
+				DiscordUtils.replyToMessage(message, "You don't have permission to use this command (" + e.getPermissionString() + ")");
 			} else {
-				message.reply("You don't have permission to use this command");
+				DiscordUtils.replyToMessage(message, "You don't have permission to use this command");
 			}
 		} catch (InvalidUsageException e) {
 			final String details = e.getDetails();
@@ -119,8 +119,8 @@ public class CommandStore {
 				if (!correctUsage.isEmpty()) {
 					sb.append(correctUsage);
 				}
-				
-				message.reply(sb.toString());
+
+				DiscordUtils.replyToMessage(message, sb.toString());
 			}
 		}
 	}
