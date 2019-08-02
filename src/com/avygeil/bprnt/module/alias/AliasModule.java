@@ -44,7 +44,6 @@ public class AliasModule extends ModuleBase {
 
 	@Override
 	public boolean load() {
-		// TODO Auto-generated method stub
 		return true;
 	}
 	
@@ -65,7 +64,6 @@ public class AliasModule extends ModuleBase {
 
 	@Override
 	public void unload() {
-		// TODO Auto-generated method stub
 	}
 
 	@Override

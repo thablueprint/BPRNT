@@ -2,7 +2,8 @@ package com.avygeil.bprnt.util;
 
 import com.avygeil.bprnt.command.ParentCommand;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.text.StrTokenizer;
+import org.apache.commons.text.StringTokenizer;
+import org.apache.commons.text.matcher.StringMatcherFactory;
 
 import java.net.InetSocketAddress;
 import java.util.Stack;
@@ -12,7 +13,14 @@ public final class FormatUtils {
 	private FormatUtils() {
 	}
 	
-	private static final StrTokenizer tokenizer = new StrTokenizer("", ' ', '"');
+	private static final StringTokenizer tokenizer = new StringTokenizer();
+
+	static {
+		tokenizer.setDelimiterMatcher(StringMatcherFactory.INSTANCE.charSetMatcher(' ', '\t', '\n', '\r', '\f'));
+		tokenizer.setQuoteMatcher(StringMatcherFactory.INSTANCE.doubleQuoteMatcher());
+		tokenizer.setEmptyTokenAsNull(false);
+		tokenizer.setIgnoreEmptyTokens(true);
+	}
 	
 	public static String[] tokenize(String string) {
 		return tokenizer.reset(string).getTokenArray();

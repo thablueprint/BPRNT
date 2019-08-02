@@ -51,8 +51,6 @@ public class Bot {
 	}
 	
 	public void initialize() {
-		final Guild thisGuild = getGuild();
-
 		// first, create the permissions handler for this module
 		
 		final PermissionsConfig permissionsConfig = config.permissions;
@@ -95,7 +93,7 @@ public class Bot {
 			}
 			
 			// create a logger instance for this module
-			final Logger moduleLogger = LoggerFactory.getLogger(clazz.getSimpleName() + "#" + thisGuild.getName());
+			final Logger moduleLogger = LoggerFactory.getLogger(clazz.getSimpleName() + "#" + manager.getClient().getGuildById(thisGuildId).block().getName());
 			
 			// enforce a specific constructor for the class...
 			// if the class doesn't exactly implement the constructor, it should logically revert
@@ -149,8 +147,8 @@ public class Bot {
 		return manager;
 	}
 	
-	public Guild getGuild() {
-		return manager.getClient().getGuildById(thisGuildId).block();
+	public Snowflake getGuildId() {
+		return thisGuildId;
 	}
 	
 	public CommandStore getCommandStore() {

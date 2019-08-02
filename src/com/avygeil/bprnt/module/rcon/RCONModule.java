@@ -38,7 +38,6 @@ public class RCONModule extends ModuleBase {
 
 	@Override
 	public boolean load() {
-		// TODO Auto-generated method stub
 		return true;
 	}
 	
@@ -66,7 +65,6 @@ public class RCONModule extends ModuleBase {
 
 	@Override
 	public void unload() {
-		// TODO Auto-generated method stub
 	}
 
 	@Override
@@ -95,7 +93,7 @@ public class RCONModule extends ModuleBase {
 	
 	public void bindRCONServerCommand(Command cmd, String[] args, Member sender, Message message) {
 		if (args.length < 2) {
-			DiscordUtils.replyToMessage(message, "Usage: `!bindRCONServer <name> <ip[:port]> [rconpassword]`");
+			DiscordUtils.replyToMessage(message, "Usage: `!rconConfig bind <name> <ip[:port]> [rconpassword]`");
 			return;
 		}
 		
@@ -131,7 +129,7 @@ public class RCONModule extends ModuleBase {
 		}
 		
 		if (args.length < 1) {
-			DiscordUtils.replyToMessage(message, "Usage: !rcon <server>");
+			DiscordUtils.replyToMessage(message, "Usage: !rconConfig unbind <server>");
 			return;
 		}
 		
